@@ -1,0 +1,14 @@
+{
+  "_id": "656faa72d73a4fcb5ec2e053",
+  "admin_id": "656faa72d73a4fcb5ec2e04f",
+  "user_ids": [
+    "656faa72d73a4fcb5ec2e04f",
+    "656faa72d73a4fcb5ec2e050",
+    "656faa72d73a4fcb5ec2e051"
+  ],
+  "name": "Sample Space",
+  "description": "This is a sample space",
+  "invite_code": "sample_invite_code",
+  "capacity": 10,
+  "__v": 0
+}

@@ -1,9 +1,7 @@
 const mongoose = require('mongoose');
-
 const {databaseConnector, getDatabaseURL} = require('./database');
-// import models
 const {User} = require('./models/UserModel');
-// model functions
+const {Space} = require('./models/SpaceModel');
 const {hashString} = require('./functions/userFunctions');
 
 const dotenv = require('dotenv');
@@ -38,6 +36,15 @@ const users = [
     position: 'Designer',
   },
 ];
+
+const spaceData = {
+  admin_id: null, // Placeholder for the admin user
+  user_ids: [], // Placeholder for user IDs
+  name: 'Sample Space',
+  description: 'This is a sample space',
+  invite_code: 'sample_invite_code',
+  capacity: 10,
+};
 
 // set connection URL
 const databaseURL = getDatabaseURL(process.env.NODE_ENV);
@@ -75,15 +82,30 @@ databaseConnector(databaseURL)
       // Set the password of the user.
       user.password = await hashString(user.password);
     }
+
     // Save the users to the database.
-    let usersCreated = await User.insertMany(users);
+    const usersCreated = await User.insertMany(users);
+
+    // Update the space data with the created user IDs
+    spaceData.admin_id = usersCreated[0]._id; // Use the first user as the admin
+    spaceData.user_ids = usersCreated.map((user) => user._id);
+
+    // Save the space to the database.
+    const spaceCreated = await Space.create(spaceData);
 
     // Log modified to list all data created.
     console.log(
-      'New DB data created.\n' + JSON.stringify({users: usersCreated}, null, 4)
+      'New DB data created.\n' +
+        JSON.stringify({users: usersCreated, spaces: spaceCreated}, null, 4)
     );
   })
-  .then(() => {
+  .catch((error) => {
+    console.log(`
+    Some error occurred connecting to the database! It was: 
+    ${error}
+    `);
+  })
+  .finally(() => {
     // Disconnect from the database.
     mongoose.connection.close();
     console.log('DB seed connection closed.');

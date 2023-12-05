@@ -21,7 +21,7 @@ const {
   updateUser,
   deleteUser,
   filterUndefinedProperties,
-} = require('../functions/UserFunctions');
+} = require('../functions/userFunctions');
 
 // Validate user email uniqueness
 const uniqueEmailCheck = async (request, response, next) => {

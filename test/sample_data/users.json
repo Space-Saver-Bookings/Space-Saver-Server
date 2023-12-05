@@ -1,0 +1,35 @@
+{
+  "userCount": 3,
+  "usersArray": [
+    {
+      "_id": "656f9e4cbf68f2339838b2d9",
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com",
+      "post_code": "12345",
+      "country": "NZ",
+      "position": "Developer",
+      "__v": 0
+    },
+    {
+      "_id": "656f9e4cbf68f2339838b2da",
+      "first_name": "Alice",
+      "last_name": "Smith",
+      "email": "alice.smith@example.com",
+      "post_code": "67890",
+      "country": "AUS",
+      "position": "Manager",
+      "__v": 0
+    },
+    {
+      "_id": "656f9e4cbf68f2339838b2db",
+      "first_name": "Bob",
+      "last_name": "Johnson",
+      "email": "bob.johnson@example.com",
+      "post_code": "54321",
+      "country": "ID",
+      "position": "Designer",
+      "__v": 0
+    }
+  ]
+}

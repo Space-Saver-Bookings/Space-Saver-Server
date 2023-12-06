@@ -65,6 +65,7 @@ app.use('/users', userController)
 const spaceController = require("./controllers/SpaceController")
 app.use('/spaces', spaceController)
 
+
 // handle all other routes --> leave at bottom of page
 app.get('*', (request, response) => {
   response.status(404).json({

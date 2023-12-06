@@ -25,6 +25,7 @@ beforeEach(async () => {
   for (email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
+
 });
 
 // disconnect after tests
@@ -32,11 +33,11 @@ afterAll(async () => {
   await databaseDisconnector();
 });
 
+
 describe('User Router', () => {
   describe('POST /users/register', () => {
     it('should register a new user', async () => {
       jest.setTimeout(10000);
-
       const response = await request(app).post('/users/register').send({
         first_name: 'John',
         last_name: 'Doe',
@@ -57,6 +58,7 @@ describe('User Router', () => {
         first_name: 'Alice',
         last_name: 'Smith',
         email: 'alice.smith@example.com',
+
         password: 'password123',
         post_code: '12345',
         country: 'NZ',

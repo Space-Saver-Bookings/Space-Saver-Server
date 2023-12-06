@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
+
 const {databaseConnector, getDatabaseURL} = require('./database');
 const {User} = require('./models/UserModel');
 const {Space} = require('./models/SpaceModel');
+
 const {hashString} = require('./functions/userFunctions');
 
 const dotenv = require('dotenv');
@@ -37,6 +39,7 @@ const users = [
   },
 ];
 
+
 const spaceData = {
   admin_id: null, // Placeholder for the admin user
   user_ids: [], // Placeholder for user IDs
@@ -45,6 +48,7 @@ const spaceData = {
   invite_code: 'sample_invite_code',
   capacity: 10,
 };
+
 
 // set connection URL
 const databaseURL = getDatabaseURL(process.env.NODE_ENV);

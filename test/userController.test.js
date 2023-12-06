@@ -25,7 +25,6 @@ beforeEach(async () => {
   for (email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
-});
 
 // disconnect after tests
 afterAll(async () => {

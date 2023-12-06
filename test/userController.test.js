@@ -7,7 +7,18 @@ const {databaseDisconnector} = require('../src/database');
 
 // Clear the database before each test
 beforeEach(async () => {
-  await User.deleteOne({email: 'john.doe@example.com'});
+  const emailToDelete = 'john.doe@example.com';
+
+  // Check if a user with the specified email exists
+  const userToDelete = await User.findOne({ email: emailToDelete });
+
+  if (userToDelete) {
+    // If the user exists, delete them
+    await User.deleteOne({ email: emailToDelete });
+    console.log(`User with email ${emailToDelete} deleted before the test.`);
+  } else {
+    console.log(`No user found with email ${emailToDelete}. No deletion needed.`);
+  }
 });
 
 // disconnect after tests

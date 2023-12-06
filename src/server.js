@@ -65,6 +65,9 @@ app.use('/users', userController)
 const spaceController = require("./controllers/SpaceController")
 app.use('/spaces', spaceController)
 
+const roomController = require("./controllers/RoomController")
+app.use('/rooms', roomController)
+
 // handle all other routes --> leave at bottom of page
 app.get('*', (request, response) => {
   response.status(404).json({

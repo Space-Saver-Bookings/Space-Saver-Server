@@ -159,6 +159,19 @@ async function deleteUser(userID) {
   return await User.findByIdAndDelete(userID).exec();
 }
 
+async function deleteUserByEmail(email) {
+  // Check if a user with the specified email exists
+  const userToDelete = await User.findOne({email});
+
+  if (userToDelete) {
+    // If the user exists, delete them
+    await User.deleteOne({email});
+    console.log(`User with email ${email} deleted.`);
+  } else {
+    console.log(`No user found with email ${email}.`);
+  }
+}
+
 function filterUndefinedProperties(obj) {
   return Object.fromEntries(
     Object.entries(obj).filter(([_, v]) => v !== undefined)
@@ -182,5 +195,6 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
+  deleteUserByEmail,
   filterUndefinedProperties
 };

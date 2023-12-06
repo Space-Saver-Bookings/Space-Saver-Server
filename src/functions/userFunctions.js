@@ -159,7 +159,6 @@ async function deleteUser(userID) {
   return await User.findByIdAndDelete(userID).exec();
 }
 
-
 async function deleteUserByEmail(email) {
   // Check if a user with the specified email exists
   const userToDelete = await User.findOne({email});
@@ -172,7 +171,6 @@ async function deleteUserByEmail(email) {
     console.log(`No user found with email ${email}.`);
   }
 }
-
 
 function filterUndefinedProperties(obj) {
   return Object.fromEntries(

@@ -21,6 +21,7 @@ const {
   updateUser,
   deleteUser,
   filterUndefinedProperties,
+} = require('../functions/userFunctions');
 
 const { verifyJwtHeader } = require('../middleware/sharedMiddleware');
 
@@ -188,6 +189,4 @@ router.delete('/:userID', verifyJwtHeader, async (request, response) => {
   }
 });
 
-
-module.exports = router;
-
+module.exports = router

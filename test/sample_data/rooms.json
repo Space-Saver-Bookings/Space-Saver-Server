@@ -1,0 +1,21 @@
+{
+  "RoomCount": 2,
+  "RoomArray": [
+    {
+      "_id": "656fc3785894d411d7071b79",
+      "space_id": "656fc3785894d411d7071b77",
+      "name": "Room 1",
+      "description": "This is Room 1",
+      "capacity": 5,
+      "__v": 0
+    },
+    {
+      "_id": "656fc3785894d411d7071b7a",
+      "space_id": "656fc3785894d411d7071b77",
+      "name": "Room 2",
+      "description": "This is Room 2",
+      "capacity": 8,
+      "__v": 0
+    }
+  ]
+}

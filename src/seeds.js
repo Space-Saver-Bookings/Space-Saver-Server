@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
-
 const {databaseConnector, getDatabaseURL} = require('./database');
 const {User} = require('./models/UserModel');
-const {Space} = require('./models/SpaceModel');
-
+const { Space } = require('./models/SpaceModel');
+const { Room } = require('./models/RoomModel');
 const {hashString} = require('./functions/userFunctions');
 
 const dotenv = require('dotenv');
@@ -39,16 +38,31 @@ const users = [
   },
 ];
 
-
 const spaceData = {
-  admin_id: null, // Placeholder for the admin user
-  user_ids: [], // Placeholder for user IDs
+  admin_id: null, // Placeholder
+  user_ids: [], // Placeholder
   name: 'Sample Space',
   description: 'This is a sample space',
   invite_code: 'sample_invite_code',
   capacity: 10,
 };
 
+const roomsData = [
+  {
+    space_id: null, // Placeholder
+    room_id: null, // Placeholder
+    name: 'Room 1',
+    description: 'This is Room 1',
+    capacity: 5,
+  },
+  {
+    space_id: null,
+    room_id: null,
+    name: 'Room 2',
+    description: 'This is Room 2',
+    capacity: 8,
+  },
+];
 
 // set connection URL
 const databaseURL = getDatabaseURL(process.env.NODE_ENV);
@@ -97,10 +111,22 @@ databaseConnector(databaseURL)
     // Save the space to the database.
     const spaceCreated = await Space.create(spaceData);
 
+    // Update the rooms data with the created space ID
+    roomsData.forEach((room) => {
+      room.space_id = spaceCreated._id;
+    });
+
+    // Save the rooms to the database.
+    const roomsCreated = await Room.insertMany(roomsData);
+
     // Log modified to list all data created.
     console.log(
       'New DB data created.\n' +
-        JSON.stringify({users: usersCreated, spaces: spaceCreated}, null, 4)
+        JSON.stringify(
+          {users: usersCreated, spaces: spaceCreated, rooms: roomsCreated},
+          null,
+          4
+        )
     );
   })
   .catch((error) => {

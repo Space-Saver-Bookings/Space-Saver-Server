@@ -4,6 +4,11 @@ const request = require("supertest");
 const { app } = require("../src/server");
 const { databaseDisconnector } = require("../src/database");
 
+// disconnect after tests
+afterAll(async () => {
+  await databaseDisconnector();
+});
+
 describe("Server '/' route exists and returns the hello world", () => {
     it("'/' route exists and returns status 200", async () => {
         const responseResult = await request(app).get("/");
@@ -16,5 +21,4 @@ describe("Server '/' route exists and returns the hello world", () => {
     });
 });
 
-// disconnect after tests
-databaseDisconnector()
+

@@ -1,0 +1,10 @@
+{
+  "_id": "656f8fcf8ce395d1ab2ccfd6",
+  "first_name": "John",
+  "last_name": "Doe",
+  "email": "john.doe@example.com",
+  "post_code": "12345",
+  "country": "NZ",
+  "position": "Developer",
+  "__v": 0
+}

@@ -1,6 +1,6 @@
 {
   "userCount": 3,
-  "usersArray": [
+  "users": [
     {
       "_id": "656f9e4cbf68f2339838b2d9",
       "first_name": "John",

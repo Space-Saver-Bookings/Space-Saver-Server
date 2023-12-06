@@ -68,6 +68,9 @@ app.use('/spaces', spaceController)
 const roomController = require("./controllers/RoomController")
 app.use('/rooms', roomController)
 
+const bookingController = require("./controllers/BookingController")
+app.use('/bookings', bookingController)
+
 // handle all other routes --> leave at bottom of page
 app.get('*', (request, response) => {
   response.status(404).json({

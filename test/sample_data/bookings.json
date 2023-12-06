@@ -1,0 +1,16 @@
+{
+  "BookingCount": 1,
+  "Bookings": [
+    {
+      "_id": "656fc63db191a2f3d7d73990",
+      "room_id": "656fc63db191a2f3d7d7398d",
+      "primary_user_id": "656fc63db191a2f3d7d73987",
+      "invited_user_ids": [],
+      "title": "Meeting 1",
+      "description": "This is Meeting 1",
+      "start_time": "2023-01-01T08:00:00.000Z",
+      "end_time": "2023-01-01T09:00:00.000Z",
+      "__v": 0
+    }
+  ]
+}

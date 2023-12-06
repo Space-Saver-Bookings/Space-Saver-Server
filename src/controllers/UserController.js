@@ -103,7 +103,7 @@ router.get('/', verifyJwtHeader, async (request, response) => {
 
   response.json({
     userCount: allUsers.length,
-    usersArray: allUsers,
+    users: allUsers,
   });
 });
 

@@ -1,8 +1,12 @@
 const mongoose = require('mongoose');
+
 const {databaseConnector, getDatabaseURL} = require('./database');
+// models
 const {User} = require('./models/UserModel');
 const { Space } = require('./models/SpaceModel');
 const { Room } = require('./models/RoomModel');
+const { Booking } = require('./models/BookingModel');
+// functions
 const {hashString} = require('./functions/userFunctions');
 
 const dotenv = require('dotenv');
@@ -64,6 +68,18 @@ const roomsData = [
   },
 ];
 
+const bookingsData = [
+  {
+    room_id: null, // Placeholder
+    primary_user_id: null, // Placeholder
+    invited_user_ids: [],
+    title: 'Meeting 1',
+    description: 'This is Meeting 1',
+    start_time: new Date('2023-01-01T08:00:00Z'),
+    end_time: new Date('2023-01-01T09:00:00Z'),
+  },
+];
+
 // set connection URL
 const databaseURL = getDatabaseURL(process.env.NODE_ENV);
 
@@ -119,11 +135,25 @@ databaseConnector(databaseURL)
     // Save the rooms to the database.
     const roomsCreated = await Room.insertMany(roomsData);
 
+    // Update the bookings data with the created room and user IDs
+    bookingsData.forEach((booking) => {
+      booking.room_id = roomsCreated[0]._id; // Use the first room for the booking
+      booking.primary_user_id = usersCreated[0]._id; // Use the first user as the primary user
+    });
+
+    // Save the bookings to the database.
+    const bookingsCreated = await Booking.insertMany(bookingsData);
+
     // Log modified to list all data created.
     console.log(
       'New DB data created.\n' +
         JSON.stringify(
-          {users: usersCreated, spaces: spaceCreated, rooms: roomsCreated},
+          {
+            users: usersCreated,
+            spaces: spaceCreated,
+            rooms: roomsCreated,
+            bookings: bookingsCreated,
+          },
           null,
           4
         )

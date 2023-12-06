@@ -23,7 +23,7 @@ router.get('/', verifyJwtHeader, async (request, response) => {
 
   response.json({
     RoomCount: allRooms.length,
-    RoomArray: allRooms,
+    Rooms: allRooms,
   });
 });
 

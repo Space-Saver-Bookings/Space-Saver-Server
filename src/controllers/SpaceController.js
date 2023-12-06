@@ -22,7 +22,7 @@ router.get('/', verifyJwtHeader, async (request, response) => {
 
   response.json({
     spaceCount: allSpaces.length,
-    spacesArray: allSpaces,
+    spaces: allSpaces,
   });
 });
 

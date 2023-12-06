@@ -22,6 +22,7 @@ const {
   deleteUser,
   filterUndefinedProperties,
 } = require('../functions/userFunctions');
+
 const { verifyJwtHeader } = require('../middleware/sharedMiddleware');
 
 

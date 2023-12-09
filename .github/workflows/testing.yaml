@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      DEV_DB_URL: ${{ secrets.DEV_DB_URL }}
+      PROD_DB_URL: ${{ secrets.PROD_DB_URL }}
       ENC_KEY: ${{ secrets.ENC_KEY }}
       ENC_IV: ${{ secrets.ENC_IV }}
       CI: true

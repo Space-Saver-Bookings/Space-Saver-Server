@@ -156,8 +156,8 @@ describe('User Router', () => {
 
     it('should handle non-existent user', async () => {
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'nonexistent.user@example.com',
-        password: 'invalidpassword',
+        email: 'alice.smith@example.com',
+        password: 'securepass',
       });
 
       const jwt = await loginResponse.body.jwt;
@@ -201,8 +201,8 @@ describe('User Router', () => {
 
     it('should handle non-existent user for update', async () => {
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'nonexistent.user@example.com',
-        password: 'invalidpassword',
+        email: 'alice.smith@example.com',
+        password: 'securepass',
       });
 
       const jwt = await loginResponse.body.jwt;

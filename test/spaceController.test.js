@@ -39,29 +39,27 @@ afterAll(async () => {
 describe('Space Router', () => {
   describe('GET /spaces', () => {
     test('should return an array of spaces', async () => {
-      // Create a test user in the database
-      const testUser = {
+      // Register test user
+      await request(app).post('/users/register').send({
         first_name: 'Bob',
         last_name: 'Johnson',
         email: 'bob.johnson@example.com',
-        password: 'bobspassword',
+        password: 'password123',
         post_code: '54321',
-        country: 'ID',
-        position: 'Designer',
-      };
-
-      const createdUser = await createUser(testUser);
-      // Generate a JWT for the created user
-      const jwt = await generateUserJWT({
-        userID: createdUser._id,
-        email: createdUser.email,
-        password: testUser.password,
+        country: 'NZ',
+        position: 'Developer',
       });
-      console.log(jwt);
+
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'bob.johnson@example.com',
+        password: 'password123',
+      });
+
+      const jwt = await loginResponse.body.jwt;
       // Make a request to the endpoint with the JWT in the headers
       const response = await request(app)
         .get('/spaces')
-        .set('Authorization', `Bearer ${jwt}`);
+        .set('jwt', jwt);
 
       // Assertions
       expect(response.status).toBe(200);

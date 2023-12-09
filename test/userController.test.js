@@ -5,9 +5,12 @@ const {
   getDatabaseURL,
   databaseConnector,
 } = require('../src/database');
-
 const {User} = require('../src/models/UserModel');
-const {deleteUserByEmail} = require('../src/functions/userFunctions');
+const {
+  deleteUserByEmail,
+  generateUserJWT,
+  getUserIdFromJwt,
+} = require('../src/functions/userFunctions');
 
 // Ensure the database is connected before all tests
 beforeAll(async () => {
@@ -16,53 +19,21 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  const delayDuration = 2000; // implement timeout
+  const delayDuration = 2000;
 
   // Use setTimeout for the delay
   await new Promise((resolve) => setTimeout(resolve, delayDuration));
-
-  const emailsToDelete = ['john.doe@example.com', 'alice.smith@example.com'];
-  for (email of emailsToDelete) {
-    await deleteUserByEmail(email);
-  }
 });
 
-// disconnect after tests
+// Disconnect after tests
 afterAll(async () => {
+  
   await databaseDisconnector();
 });
 
 describe('User Router', () => {
   describe('POST /users/register', () => {
     it('should register a new user', async () => {
-      jest.setTimeout(10000);
-
-      const response = await request(app).post('/users/register').send({
-        first_name: 'John',
-        last_name: 'Doe',
-        email: 'john.doe@example.com',
-        password: 'password123',
-        post_code: '12345',
-        country: 'NZ',
-        position: 'Developer',
-      });
-
-      expect(response.status).toBe(200);
-      expect(response.body.user.email).toBe('john.doe@example.com');
-    });
-
-    it('should handle duplicate email', async () => {
-      // Register the same user twice
-      await request(app).post('/users/register').send({
-        first_name: 'Alice',
-        last_name: 'Smith',
-        email: 'alice.smith@example.com',
-        password: 'password123',
-        post_code: '12345',
-        country: 'NZ',
-        position: 'Developer',
-      });
-
       const response = await request(app).post('/users/register').send({
         first_name: 'Alice',
         last_name: 'Smith',
@@ -73,7 +44,273 @@ describe('User Router', () => {
         position: 'Manager',
       });
 
-      expect(response.status).toBe(500); // Expect a 500 status for duplicate email
+      expect(response.status).toBe(200);
+      expect(response.body.user.email).toBe('alice.smith@example.com');
+    });
+
+    it('should handle duplicate email', async () => {
+      const response = await request(app).post('/users/register').send({
+        first_name: 'Alice',
+        last_name: 'Smith',
+        email: 'alice.smith@example.com',
+        password: 'securepass',
+        post_code: '67890',
+        country: 'AUS',
+        position: 'Manager',
+      });
+
+      expect(response.status).toBe(500);
+    });
+  });
+
+  describe('POST /users/login', () => {
+    it('should login an existing user', async () => {
+      const response = await request(app).post('/users/login').send({
+        email: 'alice.smith@example.com',
+        password: 'securepass',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body.jwt).toBeTruthy();
+    });
+
+    it('should handle invalid login details', async () => {
+      const response = await request(app).post('/users/login').send({
+        email: 'nonexistent.user@example.com',
+        password: 'invalidpassword',
+      });
+
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe('User not found.');
+    });
+  });
+
+  describe('POST /users/token-refresh', () => {
+    it("should extend a user's JWT validity", async () => {
+      // Login the user to get the initial JWT
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'alice.smith@example.com',
+        password: 'securepass',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      // Refresh the token
+      const refreshResponse = await request(app)
+        .post('/users/token-refresh')
+        .send({jwt: jwt});
+
+      expect(refreshResponse.status).toBe(200);
+      expect(refreshResponse.body.jwt).toBeTruthy();
+    });
+
+    it('should handle invalid JWT for token refresh', async () => {
+      const response = await request(app)
+        .post('/users/token-refresh')
+        .send({jwt: 'invalidjwt'});
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBeTruthy();
+    });
+  });
+
+  describe('GET /users', () => {
+    it('should return a list of users', async () => {
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'alice.smith@example.com',
+        password: 'securepass',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      // Make a request to the endpoint with the JWT in the headers
+      const response = await request(app).get('/users').set('jwt', jwt);
+
+      expect(response.status).toBe(200);
+      expect(response.body.userCount).toBeGreaterThanOrEqual(0);
+      expect(response.body.users).toBeInstanceOf(Array);
+    });
+  });
+
+  describe('GET /users/:userID', () => {
+    it('should return a specific user', async () => {
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'alice.smith@example.com',
+        password: 'securepass',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      // Get the ID of the registered user
+      const user = await User.findOne({email: 'alice.smith@example.com'});
+      const userID = user._id.toString();
+
+      // Make a request to the endpoint with the JWT in the headers
+      const response = await request(app)
+        .get(`/users/${userID}`)
+        .set('jwt', jwt);
+
+      expect(response.status).toBe(200);
+      expect(response.body.email).toBe('alice.smith@example.com');
+    });
+
+    it('should handle non-existent user', async () => {
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'nonexistent.user@example.com',
+        password: 'invalidpassword',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      // Make a request to the endpoint with the JWT in the headers
+      const response = await request(app)
+        .get('/users/nonexistentUserID')
+        .set('jwt', jwt);
+
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe('User not found');
+    });
+  });
+
+  describe('PUT /users/:userID', () => {
+    it('should update a user', async () => {
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'alice.smith@example.com',
+        password: 'securepass',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      // Get the ID of the registered user
+      const user = await User.findOne({email: 'alice.smith@example.com'});
+      const userID = user._id.toString();
+
+      // Make a request to the endpoint with the JWT in the headers
+      const response = await request(app)
+        .put(`/users/${userID}`)
+        .set('jwt', jwt)
+        .send({
+          first_name: 'UpdatedAlice',
+          last_name: 'UpdatedSmith',
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.first_name).toBe('UpdatedAlice');
+      expect(response.body.last_name).toBe('UpdatedSmith');
+    });
+
+    it('should handle non-existent user for update', async () => {
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'nonexistent.user@example.com',
+        password: 'invalidpassword',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      // Make a request to the endpoint with the JWT in the headers
+      const response = await request(app)
+        .put('/users/nonexistentUserID')
+        .set('jwt', jwt)
+        .send({
+          first_name: 'UpdatedJohn',
+          last_name: 'UpdatedDoe',
+        });
+
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe('User not found');
+    });
+  });
+
+  describe('DELETE /users/:userID', () => {
+    it('should handle non-existent user for deletion', async () => {
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'alice.smith@example.com',
+        password: 'securepass',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      // Make a request to the endpoint with the JWT in the headers
+      const response = await request(app)
+        .delete('/users/nonexistentUserID')
+        .set('jwt', jwt);
+
+      expect(response.status).toBe(403);
+      expect(response.body.message).toBe('User not found');
+    });
+
+    it('should handle unauthorized deletion', async () => {
+      // Register another user
+      await request(app).post('/users/register').send({
+        first_name: 'Bob',
+        last_name: 'Johnson',
+        email: 'bob.johnson@example.com',
+        password: 'password123',
+        post_code: '54321',
+        country: 'NZ',
+        position: 'Developer',
+      });
+
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'alice.smith@example.com',
+        password: 'securepass',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      // Get the ID of the other registered user
+      const otherUser = await User.findOne({email: 'bob.johnson@example.com'});
+      const otherUserID = otherUser._id.toString();
+
+      // Make a request to the endpoint with the JWT in the headers
+      const response = await request(app)
+        .delete(`/users/${otherUserID}`)
+        .set('jwt', jwt);
+
+      expect(response.status).toBe(403);
+      expect(response.body.error).toBe(
+        'Unauthorized. You can only delete your own account.'
+      );
+    });
+    it('should delete a user', async () => {
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'alice.smith@example.com',
+        password: 'securepass',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      // Get the ID of the registered user
+      const user = await User.findOne({email: 'alice.smith@example.com'});
+      const userID = user._id.toString();
+
+      // Make a request to the endpoint with the JWT in the headers
+      const response = await request(app)
+        .delete(`/users/${userID}`)
+        .set('jwt', jwt);
+
+      expect(response.status).toBe(200);
+      expect(response.body.message).toBe('User deleted successfully');
+    });
+    it('should delete a user', async () => {
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'bob.johnson@example.com',
+        password: 'password123',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      // Get the ID of the registered user
+      const user = await User.findOne({email: 'bob.johnson@example.com'});
+      const userID = user._id.toString();
+
+      // Make a request to the endpoint with the JWT in the headers
+      const response = await request(app)
+        .delete(`/users/${userID}`)
+        .set('jwt', jwt);
+
+      expect(response.status).toBe(200);
+      expect(response.body.message).toBe('User deleted successfully');
     });
   });
 });

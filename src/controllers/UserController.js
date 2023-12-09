@@ -72,30 +72,41 @@ router.post(
   }
 );
 
-// Login existing user
 router.post('/login', async (request, response) => {
-  let targetUser = await User.findOne({email: request.body.email}).exec();
   try {
+    let targetUser = await User.findOne({email: request.body.email}).exec();
+
+    if (!targetUser) {
+      return response.status(404).json({message: 'User not found.'});
+    }
+
     if (await validateHashedData(request.body.password, targetUser.password)) {
       let encryptedUserJwt = await generateUserJWT({
         userID: targetUser._id,
         email: targetUser.email,
-        password: targetUser.password,
+        password: targetUser.password
       });
       response.json({jwt: encryptedUserJwt});
+    } else {
+      response.status(401).json({message: 'Invalid password.'});
     }
-  } catch {
-    response.status(400).json({message: 'Invalid user details provided.'});
+  } catch (error) {
+    console.error(error);
+    response.status(500).json({message: 'Internal server error.'});
   }
 });
 
+
 // Extend a user's JWT validity
 router.post('/token-refresh', async (request, response) => {
-  let oldToken = request.body.jwt;
-  let refreshResult = await verifyUserJWT(oldToken).catch((error) => {
-    return {error: error.message};
-  });
-  response.json({jwt: refreshResult});
+  try {
+    let oldToken = request.body.jwt;
+    let refreshResult = await verifyUserJWT(oldToken);
+    response.json({ jwt: refreshResult });
+  } catch (error) {
+    console.error(error);
+    response.status(400).json({ error: error.message });
+  }
 });
 
 // List all users

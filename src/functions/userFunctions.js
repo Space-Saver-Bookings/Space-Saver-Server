@@ -48,27 +48,38 @@ async function generateUserJWT(userDetails) {
 }
 
 async function verifyUserJWT(userJWT) {
-  // Verify that the JWT is still valid.
-  let userJwtVerified = jwt.verify(userJWT, process.env.JWT_SECRET, {
-    complete: true,
-  });
-  // Decrypt the encrypted payload.
-  let decryptedJwtPayload = decryptString(userJwtVerified.payload.data);
-  // Parse the decrypted data into an object.
-  let userData = JSON.parse(decryptedJwtPayload);
-  // Find the user mentioned in the JWT.
-  let targetUser = await User.findById(userData.userID).exec();
-  // If the JWT data matches the stored data...
-  if (
-    targetUser.password == userData.password &&
-    targetUser.email == userData.email
-  ) {
-    // ...User details are valid, make a fresh JWT to extend their token's valid time
-    return generateJWT({data: userJwtVerified.payload.data});
-  } else {
-    // Otherwise, user details are invalid and they don't get a new token.
-    // When a frontend receives this error, it should redirect to a sign-in page.
-    throw new Error({message: 'Invalid user token.'});
+  try {
+    // Verify that the JWT is still valid.
+    let userJwtVerified = jwt.verify(userJWT, process.env.JWT_SECRET, {
+      complete: true,
+    });
+    
+    // Decrypt the encrypted payload.
+    let decryptedJwtPayload = decryptString(userJwtVerified.payload.data);
+    console.log(decryptedJwtPayload);
+    
+    // Parse the decrypted data into an object.
+    let userData = JSON.parse(decryptedJwtPayload);
+
+    // Find the user mentioned in the JWT.
+    let targetUser = await User.findById(userData.userID).exec();
+
+    // If the JWT data matches the stored data...
+    if (
+      targetUser &&
+      ((targetUser.password, userData.password)) &&
+      targetUser.email == userData.email
+    ) {
+      // ...User details are valid, make a fresh JWT to extend their token's valid time
+      return generateJWT({data: userJwtVerified.payload.data});
+    } else {
+      // Otherwise, user details are invalid and they don't get a new token.
+      // When a frontend receives this error, it should redirect to a sign-in page.
+      throw new Error('Invalid user token.');
+    }
+  } catch (error) {
+    console.error(error);
+    throw new Error('Invalid user token.');
   }
 }
 
@@ -118,6 +129,13 @@ async function hashString(stringToHash) {
 }
 
 async function validateHashedData(providedUnhashedData, storedHashedData) {
+  if (providedUnhashedData === undefined || storedHashedData === undefined) {
+    // Handle the case where either of the values is undefined.
+    return false;
+  }
+  console.log(providedUnhashedData)
+  console.log(storedHashedData)
+  console.log(await bcrypt.compare(providedUnhashedData, storedHashedData));
   return await bcrypt.compare(providedUnhashedData, storedHashedData);
 }
 
@@ -128,7 +146,6 @@ async function validateHashedData(providedUnhashedData, storedHashedData) {
 async function getAllUsers() {
   return await User.find({});
 }
-
 
 async function createUser(userDetails) {
   // Create new user based on userDetails data
@@ -196,5 +213,5 @@ module.exports = {
   updateUser,
   deleteUser,
   deleteUserByEmail,
-  filterUndefinedProperties
+  filterUndefinedProperties,
 };

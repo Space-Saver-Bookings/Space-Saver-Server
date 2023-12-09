@@ -6,7 +6,6 @@ dotenv.config();
 const express = require('express');
 const app = express();
 // If no process.env.X is found, assign a default value instead.
-const HOST = process.env.HOST || 'localhost';
 const PORT = process.env.PORT || 3000;
 
 // Configure some basic Helmet settings on the server instance.
@@ -42,7 +41,7 @@ const databaseURL = getDatabaseURL(process.env.NODE_ENV);
 databaseConnector(databaseURL)
   .then(() => {
     console.log(
-      `Database connected successfully! \n Host: ${HOST} \n Port: ${PORT}`
+      `Database connected successfully! \n Port: ${PORT}`
     );
   })
   .catch((error) => {
@@ -80,7 +79,6 @@ app.get('*', (request, response) => {
 });
 
 module.exports = {
-  HOST,
   PORT,
   app,
 };

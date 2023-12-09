@@ -15,28 +15,28 @@ async function getOneSpace(spaceID) {
 async function createSpace(spaceDetails) {
   // Create new space based on spaceDetails data
   let newSpace = new Space({
-    admin_id: userDetails.admin_id,
-    user_ids: userDetails.user_ids,
-    name: userDetails.name,
-    description: userDetails.description,
-    invite_code: userDetails.invite_code,
-    capacity: userDetails.capacity,
+    admin_id: spaceDetails.admin_id,
+    room_ids: spaceDetails.room_ids,
+    name: spaceDetails.name,
+    description: spaceDetails.description,
+    invite_code: spaceDetails.invite_code,
+    capacity: spaceDetails.capacity,
   });
 
   // And save it to DB
   return await newSpace.save();
 }
 
-async function updateUser(spaceDetails) {
-  // Find user, update it, return the updated user data.
+async function updateSpace(spaceDetails) {
+  // Find space, update it, return the updated space data.
   return await Space.findByIdAndUpdate(
     spaceDetails.spaceID,
     spaceDetails.updatedData,
-    {returnDocument: 'after'}
+    {new: true}
   ).exec();
 }
 
-async function deleteUser(spaceID) {
+async function deleteSpace(spaceID) {
   return await Space.findByIdAndDelete(spaceID).exec();
 }
 
@@ -46,6 +46,30 @@ function filterUndefinedProperties(obj) {
   );
 }
 
+async function generateAccessCode() {
+  const characters =
+    '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+  while (true) {
+    let accessCode = '';
+
+    for (let i = 0; i < 5; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      accessCode += characters[randomIndex];
+    }
+
+    // Check if the generated code already exists in the database
+    const existingSpace = await Space.findOne({
+      invite_code: accessCode,
+    })
+
+    if (!existingSpace) {
+      return accessCode; // Return the code if it's unique
+    }
+    // Otherwise, generate a new code and repeat the loop
+  }
+}
+
 // --------------------------------------
 // ----- Exports
 
@@ -53,7 +77,8 @@ module.exports = {
     getAllSpaces,
     getOneSpace,
     createSpace,
-    updateUser,
-    deleteUser,
-    filterUndefinedProperties,
+    updateSpace,
+    deleteSpace,
+  filterUndefinedProperties,
+    generateAccessCode
 };

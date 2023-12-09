@@ -21,6 +21,7 @@ const SpaceSchema = new mongoose.Schema({
   invite_code: {
     type: String,
     required: false,
+    unique: true
   },
   capacity: {
     type: Number,

@@ -72,7 +72,7 @@ router.post('/', verifyJwtHeader, async (request, response) => {
 
   const spaceDetails = {
     admin_id: requestingUserID,
-    room_ids: request.body.room_ids,
+    user_ids: request.body.user_ids,
     name: request.body.name,
     description: request.body.description,
     invite_code: invite_code,
@@ -101,13 +101,13 @@ router.post('/', verifyJwtHeader, async (request, response) => {
  */
 router.put('/:spaceID', verifyJwtHeader, async (request, response) => {
   try {
-    const {admin_id, room_ids, name, description, capacity} = request.body;
+    const {admin_id, user_ids, name, description, capacity} = request.body;
 
     const spaceDetails = {
       spaceID: request.params.spaceID,
       updatedData: filterUndefinedProperties({
         admin_id,
-        room_ids,
+        user_ids,
         name,
         description,
         capacity,

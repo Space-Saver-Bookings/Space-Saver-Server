@@ -16,7 +16,7 @@ async function createSpace(spaceDetails) {
   // Create new space based on spaceDetails data
   let newSpace = new Space({
     admin_id: spaceDetails.admin_id,
-    room_ids: spaceDetails.room_ids,
+    user_ids: spaceDetails.user_ids,
     name: spaceDetails.name,
     description: spaceDetails.description,
     invite_code: spaceDetails.invite_code,

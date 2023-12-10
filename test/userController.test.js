@@ -17,7 +17,10 @@ beforeAll(async () => {
   const databaseURL = getDatabaseURL(process.env.NODE_ENV);
   await databaseConnector(databaseURL);
 
-  
+  const emailsToDelete = ['bob.johnson@example.com', 'alice.smith@example.com'];
+  for (email of emailsToDelete) {
+    await deleteUserByEmail(email);
+  }
 });
 
 beforeEach(async () => {
@@ -29,7 +32,6 @@ beforeEach(async () => {
 
 // Disconnect after tests
 afterAll(async () => {
-  
   await databaseDisconnector();
 });
 
@@ -238,7 +240,9 @@ describe('User Router', () => {
         .set('jwt', jwt);
 
       expect(response.status).toBe(403);
-      expect(response.body.message).toBe('User not found');
+      expect(response.body.error).toBe(
+        'Unauthorized. You can only delete your own account.'
+      );
     });
 
     it('should handle unauthorized deletion', async () => {

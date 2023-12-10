@@ -8,7 +8,6 @@ const verifyJwtHeader = async (request, response, next) => {
         
         // Assuming verifyUserJWT is a function that verifies and refreshes the JWT
         let jwtRefresh = await verifyUserJWT(rawJwtHeader);
-        console.log(rawJwtHeader)
 
     request.headers.jwt = jwtRefresh;
 

@@ -23,8 +23,7 @@ const {
   filterUndefinedProperties,
 } = require('../functions/userFunctions');
 
-const { verifyJwtHeader } = require('../middleware/sharedMiddleware');
-
+const {verifyJwtHeader} = require('../middleware/sharedMiddleware');
 
 // Validate user email uniqueness
 const uniqueEmailCheck = async (request, response, next) => {
@@ -47,7 +46,6 @@ const handleErrors = async (error, request, response, next) => {
     next();
   }
 };
-
 
 // Sign-up a new user
 router.post(
@@ -72,10 +70,14 @@ router.post(
   }
 );
 
-// Login existing user
 router.post('/login', async (request, response) => {
-  let targetUser = await User.findOne({email: request.body.email}).exec();
   try {
+    let targetUser = await User.findOne({email: request.body.email}).exec();
+
+    if (!targetUser) {
+      return response.status(404).json({message: 'User not found.'});
+    }
+
     if (await validateHashedData(request.body.password, targetUser.password)) {
       let encryptedUserJwt = await generateUserJWT({
         userID: targetUser._id,
@@ -83,19 +85,25 @@ router.post('/login', async (request, response) => {
         password: targetUser.password,
       });
       response.json({jwt: encryptedUserJwt});
+    } else {
+      response.status(401).json({message: 'Invalid password.'});
     }
-  } catch {
-    response.status(400).json({message: 'Invalid user details provided.'});
+  } catch (error) {
+    console.error(error);
+    response.status(500).json({message: 'Internal server error.'});
   }
 });
 
 // Extend a user's JWT validity
 router.post('/token-refresh', async (request, response) => {
-  let oldToken = request.body.jwt;
-  let refreshResult = await verifyUserJWT(oldToken).catch((error) => {
-    return {error: error.message};
-  });
-  response.json({jwt: refreshResult});
+  try {
+    let oldToken = request.body.jwt;
+    let refreshResult = await verifyUserJWT(oldToken);
+    response.json({jwt: refreshResult});
+  } catch (error) {
+    console.error(error);
+    response.status(400).json({error: error.message});
+  }
 });
 
 // List all users
@@ -109,18 +117,28 @@ router.get('/', verifyJwtHeader, async (request, response) => {
 });
 
 // Show a specific user
-router.get('/:userID', verifyJwtHeader, async (request, response) => {
-  try {
-    const user = await User.findOne({_id: request.params.userID});
-    if (!user) {
-      return response.status(404).json({message: 'User not found'});
+router.get(
+  '/:userID',
+  verifyJwtHeader,
+  handleErrors,
+  async (request, response) => {
+    try {
+      const user = await User.findOne({_id: request.params.userID});
+      if (!user) {
+        return response.status(404).json({message: 'User not found'});
+      }
+      return response.json(user);
+    } catch (error) {
+      if (error.path === '_id') {
+        return response.status(404).json({message: 'User not found'});
+      }
+      console.error('Error:', error);
+      return response
+        .status(500)
+        .json({error: 'Internal server error', reason: error});
     }
-    return response.json(user);
-  } catch (error) {
-    console.error('Error:', error);
-    return response.status(500).json({error: 'Internal server error'});
   }
-});
+);
 
 // Update a user
 router.put('/:userID', async (request, response) => {
@@ -156,8 +174,13 @@ router.put('/:userID', async (request, response) => {
 
     return response.json(updatedUser);
   } catch (error) {
+    if (error.path === '_id') {
+      return response.status(404).json({message: 'User not found'});
+    }
     console.error('Error:', error);
-    return response.status(500).json({error: 'Internal server error'});
+    return response
+      .status(500)
+      .json({error: 'Internal server error', reason: error.reason});
   }
 });
 
@@ -184,9 +207,12 @@ router.delete('/:userID', verifyJwtHeader, async (request, response) => {
 
     return response.json({message: 'User deleted successfully'});
   } catch (error) {
+    if (error.path === '_id') {
+      return response.status(404).json({message: 'User not found'});
+    }
     console.error('Error:', error);
     return response.status(500).json({error: 'Internal server error'});
   }
 });
 
-module.exports = router
+module.exports = router;

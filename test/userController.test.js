@@ -16,6 +16,8 @@ const {
 beforeAll(async () => {
   const databaseURL = getDatabaseURL(process.env.NODE_ENV);
   await databaseConnector(databaseURL);
+
+  
 });
 
 beforeEach(async () => {

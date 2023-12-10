@@ -23,8 +23,7 @@ const {
   filterUndefinedProperties,
 } = require('../functions/userFunctions');
 
-const { verifyJwtHeader } = require('../middleware/sharedMiddleware');
-
+const {verifyJwtHeader} = require('../middleware/sharedMiddleware');
 
 // Validate user email uniqueness
 const uniqueEmailCheck = async (request, response, next) => {
@@ -47,7 +46,6 @@ const handleErrors = async (error, request, response, next) => {
     next();
   }
 };
-
 
 // Sign-up a new user
 router.post(
@@ -84,7 +82,7 @@ router.post('/login', async (request, response) => {
       let encryptedUserJwt = await generateUserJWT({
         userID: targetUser._id,
         email: targetUser.email,
-        password: targetUser.password
+        password: targetUser.password,
       });
       response.json({jwt: encryptedUserJwt});
     } else {
@@ -96,16 +94,15 @@ router.post('/login', async (request, response) => {
   }
 });
 
-
 // Extend a user's JWT validity
 router.post('/token-refresh', async (request, response) => {
   try {
     let oldToken = request.body.jwt;
     let refreshResult = await verifyUserJWT(oldToken);
-    response.json({ jwt: refreshResult });
+    response.json({jwt: refreshResult});
   } catch (error) {
     console.error(error);
-    response.status(400).json({ error: error.message });
+    response.status(400).json({error: error.message});
   }
 });
 
@@ -120,18 +117,28 @@ router.get('/', verifyJwtHeader, async (request, response) => {
 });
 
 // Show a specific user
-router.get('/:userID', verifyJwtHeader, async (request, response) => {
-  try {
-    const user = await User.findOne({_id: request.params.userID});
-    if (!user) {
-      return response.status(404).json({message: 'User not found'});
+router.get(
+  '/:userID',
+  verifyJwtHeader,
+  handleErrors,
+  async (request, response) => {
+    try {
+      const user = await User.findOne({_id: request.params.userID});
+      if (!user) {
+        return response.status(404).json({message: 'User not found'});
+      }
+      return response.json(user);
+    } catch (error) {
+      if (error.path === '_id') {
+        return response.status(404).json({message: 'User not found'});
+      }
+      console.error('Error:', error);
+      return response
+        .status(500)
+        .json({error: 'Internal server error', reason: error});
     }
-    return response.json(user);
-  } catch (error) {
-    console.error('Error:', error);
-    return response.status(500).json({error: 'Internal server error'});
   }
-});
+);
 
 // Update a user
 router.put('/:userID', async (request, response) => {
@@ -167,8 +174,13 @@ router.put('/:userID', async (request, response) => {
 
     return response.json(updatedUser);
   } catch (error) {
+    if (error.path === '_id') {
+      return response.status(404).json({message: 'User not found'});
+    }
     console.error('Error:', error);
-    return response.status(500).json({error: 'Internal server error'});
+    return response
+      .status(500)
+      .json({error: 'Internal server error', reason: error.reason});
   }
 });
 
@@ -195,9 +207,12 @@ router.delete('/:userID', verifyJwtHeader, async (request, response) => {
 
     return response.json({message: 'User deleted successfully'});
   } catch (error) {
+    if (error.path === '_id') {
+      return response.status(404).json({message: 'User not found'});
+    }
     console.error('Error:', error);
     return response.status(500).json({error: 'Internal server error'});
   }
 });
 
-module.exports = router
+module.exports = router;

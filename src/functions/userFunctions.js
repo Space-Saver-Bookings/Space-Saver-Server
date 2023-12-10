@@ -133,9 +133,6 @@ async function validateHashedData(providedUnhashedData, storedHashedData) {
     // Handle the case where either of the values is undefined.
     return false;
   }
-  console.log(providedUnhashedData)
-  console.log(storedHashedData)
-  console.log(await bcrypt.compare(providedUnhashedData, storedHashedData));
   return await bcrypt.compare(providedUnhashedData, storedHashedData);
 }
 

@@ -56,7 +56,6 @@ async function verifyUserJWT(userJWT) {
     
     // Decrypt the encrypted payload.
     let decryptedJwtPayload = decryptString(userJwtVerified.payload.data);
-    console.log(decryptedJwtPayload);
     
     // Parse the decrypted data into an object.
     let userData = JSON.parse(decryptedJwtPayload);

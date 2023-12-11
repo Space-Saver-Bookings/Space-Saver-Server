@@ -19,7 +19,6 @@ beforeEach(async () => {
   }
 }, 10000);
 
-
 describe('Space Router', () => {
   describe('GET /spaces', () => {
     test('should return an array of spaces', async () => {

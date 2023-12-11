@@ -36,6 +36,15 @@ const BookingSchema = new mongoose.Schema({
   },
 });
 
+BookingSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    // Move the _id field to the beginning of the object
+    ret = {_id: ret._id, ...ret};
+    delete ret.__v;
+    return ret;
+  },
+});
+
 const Booking = mongoose.model('Booking', BookingSchema);
 
 module.exports = {Booking};

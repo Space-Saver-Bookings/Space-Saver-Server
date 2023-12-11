@@ -68,11 +68,13 @@ router.post('/', verifyJwtHeader, async (request, response) => {
   const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
   const invite_code = await generateAccessCode();
 
+  const user_ids = [requestingUserID, ...request.body.user_ids];
+
   let newSpaceDoc = null;
 
   const spaceDetails = {
     admin_id: requestingUserID,
-    user_ids: request.body.user_ids,
+    user_ids: user_ids,
     name: request.body.name,
     description: request.body.description,
     invite_code: invite_code,
@@ -84,7 +86,7 @@ router.post('/', verifyJwtHeader, async (request, response) => {
     response.json({error: error.reason});
   }
 
-  response.json({
+  response.status(201).json({
     space: newSpaceDoc,
   });
 });
@@ -155,7 +157,7 @@ router.delete('/:spaceID', verifyJwtHeader, async (request, response) => {
         .json({error: `Internal server error.`, reason: `${error.reason}`});
     }
     // Check if the space making the request is the same as the space whose data is being deleted
-    if (requestingUserID !== space.admin_id) {
+    if (requestingUserID !== space.admin_id.toString()) {
       return response.status(403).json({
         error: 'Unauthorized. You can only delete the Space you are admin of',
       });

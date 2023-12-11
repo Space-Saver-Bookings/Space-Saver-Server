@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 
 const SpaceSchema = new mongoose.Schema({
   admin_id: {
-    type: String,
+    type: mongoose.Types.ObjectId,
+    ref: 'User',
     required: true,
   },
   user_ids: {
@@ -21,11 +22,20 @@ const SpaceSchema = new mongoose.Schema({
   invite_code: {
     type: String,
     required: false,
-    unique: true
+    unique: true,
   },
   capacity: {
     type: Number,
     required: false,
+  },
+});
+
+SpaceSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    // Move the _id field to the beginning of the object
+    ret = {_id: ret._id, ...ret};
+    delete ret.__v;
+    return ret;
   },
 });
 

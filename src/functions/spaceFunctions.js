@@ -5,11 +5,11 @@ const {Space} = require('../models/SpaceModel');
 
 // Returns an array of raw MongoDB database documents.
 async function getAllSpaces() {
-  return await Space.find({});
+  return await Space.find({}).populate(['user_ids', 'admin_id']);
 }
 // Returns an array of raw MongoDB database documents.
 async function getOneSpace(spaceID) {
-  return await Space.findOne({_id: request.params.spaceID});
+  return await Space.findOne({_id: spaceID});
 }
 
 async function createSpace(spaceDetails) {

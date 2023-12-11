@@ -5,14 +5,23 @@ const {User} = require('../src/models/UserModel');
 const {
   deleteUserByEmail,
 } = require('../src/functions/userFunctions');
+const { getDatabaseURL, databaseConnector, databaseDisconnector } = require('../src/database');
 
 // Ensure the users don't exist before tests
 beforeAll(async () => {
+  const databaseURL = getDatabaseURL(process.env.NODE_ENV);
+  await databaseConnector(databaseURL);
+
   const emailsToDelete = ['bob.johnson@example.com', 'alice.smith@example.com'];
   for (email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
 }, 10000);
+
+// disconnect after tests
+afterAll(async () => {
+  await databaseDisconnector();
+});
 
 beforeEach(async () => {
   const delayDuration = 2000;

@@ -51,13 +51,6 @@ databaseConnector(databaseURL)
     `);
   });
 
-// test route
-app.get('/', (request, response) => {
-  response.json({
-    message: 'Hello world!',
-  });
-});
-
 const userController = require("./controllers/UserController")
 app.use('/users', userController)
 

@@ -1,39 +1,25 @@
 const request = require('supertest');
 const {app} = require('../src/server');
-const {
-  databaseDisconnector,
-  getDatabaseURL,
-  databaseConnector,
-} = require('../src/database');
+
 const {User} = require('../src/models/UserModel');
 const {
   deleteUserByEmail,
-  generateUserJWT,
-  getUserIdFromJwt,
 } = require('../src/functions/userFunctions');
 
-// Ensure the database is connected before all tests
+// Ensure the users don't exist before tests
 beforeAll(async () => {
-  const databaseURL = getDatabaseURL(process.env.NODE_ENV);
-  await databaseConnector(databaseURL);
-
   const emailsToDelete = ['bob.johnson@example.com', 'alice.smith@example.com'];
   for (email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
-});
+}, 10000);
 
 beforeEach(async () => {
   const delayDuration = 2000;
 
   // Use setTimeout for the delay
   await new Promise((resolve) => setTimeout(resolve, delayDuration));
-});
-
-// Disconnect after tests
-afterAll(async () => {
-  await databaseDisconnector();
-});
+}, 10000);
 
 describe('User Router', () => {
   describe('POST /users/register', () => {

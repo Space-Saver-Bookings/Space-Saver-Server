@@ -1,23 +1,11 @@
 const request = require('supertest');
 const {app} = require('../src/server');
 
-const {
-  databaseConnector,
-  databaseDisconnector,
-  getDatabaseURL,
-} = require('../src/database');
-
 const {deleteUserByEmail} = require('../src/functions/userFunctions');
 const {
   createSpace,
   generateAccessCode,
 } = require('../src/functions/spaceFunctions');
-
-// Ensure the database is connected before all tests
-beforeAll(async () => {
-  const databaseURL = getDatabaseURL(process.env.NODE_ENV);
-  await databaseConnector(databaseURL);
-});
 
 beforeEach(async () => {
   // Your existing beforeEach logic
@@ -29,12 +17,7 @@ beforeEach(async () => {
   for (email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
-});
-
-// disconnect after tests
-afterAll(async () => {
-  await databaseDisconnector();
-});
+}, 10000);
 
 describe('Space Router', () => {
   describe('GET /spaces', () => {

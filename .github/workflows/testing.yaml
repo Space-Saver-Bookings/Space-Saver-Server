@@ -30,8 +30,8 @@ jobs:
       - name: Install server dependencies
         run: npm install
 
-      - name: Delay for 30 minutes
-        run: sleep 1800
+      - name: Delay for 5 minutes
+        run: sleep 300
 
       - name: Run tests
         run: npm run test-ci

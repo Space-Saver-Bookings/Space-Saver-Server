@@ -6,7 +6,7 @@ const {
   deleteUserByEmail,
 } = require('../src/functions/userFunctions');
 
-// Ensure the database is connected before all tests
+// Ensure the users don't exist before tests
 beforeAll(async () => {
   const emailsToDelete = ['bob.johnson@example.com', 'alice.smith@example.com'];
   for (email of emailsToDelete) {
@@ -20,7 +20,6 @@ beforeEach(async () => {
   // Use setTimeout for the delay
   await new Promise((resolve) => setTimeout(resolve, delayDuration));
 }, 10000);
-
 
 describe('User Router', () => {
   describe('POST /users/register', () => {

@@ -80,7 +80,7 @@ router.post('/', verifyJwtHeader, async (request, response) => {
     return response.json({error: error.reason});
   }
 
-  response.json({
+  response.status(201).json({
     room: newRoomDoc,
   });
 });

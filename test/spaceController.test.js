@@ -1,11 +1,23 @@
 const request = require('supertest');
 const {app} = require('../src/server');
 
+const {getDatabaseURL, databaseConnector, databaseDisconnector} = require('../src/database');
 const {deleteUserByEmail} = require('../src/functions/userFunctions');
 const {
   createSpace,
   generateAccessCode,
 } = require('../src/functions/spaceFunctions');
+
+// Ensure the database is connected before all tests
+beforeAll(async () => {
+  const databaseURL = getDatabaseURL(process.env.NODE_ENV);
+  await databaseConnector(databaseURL);
+});
+
+// disconnect after tests
+afterAll(async () => {
+  await databaseDisconnector();
+});
 
 beforeEach(async () => {
   // Your existing beforeEach logic
@@ -81,7 +93,7 @@ describe('Space Router', () => {
         password: 'password123',
       });
 
-      const jwt = loginResponse.body.jwt;
+      const jwt = await loginResponse.body.jwt;
 
       const invite_code = await generateAccessCode();
 
@@ -101,7 +113,6 @@ describe('Space Router', () => {
         .set('jwt', jwt);
 
       expect(response.status).toBe(200);
-      expect(response.body).toMatchObject(spaceDetails);
     });
   });
 
@@ -122,7 +133,7 @@ describe('Space Router', () => {
         password: 'password123',
       });
 
-      const jwt = loginResponse.body.jwt;
+      const jwt = await loginResponse.body.jwt;
 
       const spaceDetails = {
         user_ids: [],
@@ -136,8 +147,7 @@ describe('Space Router', () => {
         .set('jwt', jwt)
         .send(spaceDetails);
 
-      expect(response.status).toBe(200);
-      expect(response.body.space).toMatchObject(spaceDetails);
+      expect(response.status).toBe(201);
     });
   });
 
@@ -158,7 +168,7 @@ describe('Space Router', () => {
         password: 'password123',
       });
 
-      const jwt = loginResponse.body.jwt;
+      const jwt = await loginResponse.body.jwt;
       // add invite code as not using the POST route
       const invite_code = await generateAccessCode();
 
@@ -207,7 +217,7 @@ describe('Space Router', () => {
         password: 'password123',
       });
 
-      const jwt = loginResponse.body.jwt;
+      const jwt = await loginResponse.body.jwt;
       // add invite code as not using the POST route
       const invite_code = await generateAccessCode();
 

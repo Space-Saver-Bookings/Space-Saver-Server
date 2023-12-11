@@ -1,14 +1,17 @@
 const {Room} = require('../models/RoomModel');
-const {getOneSpace} = require('./spaceFunctions');
+const {getOneSpace, getAllSpaces} = require('./spaceFunctions');
 const {getUserIdFromJwt} = require('./userFunctions');
 
 // --------------------------------------
 // ----- MongoDB/MongooseJS functionality
 
 // Returns an array of raw MongoDB database documents.
-async function getAllRooms(param) {
-  return await Room.find(param).populate('space_id');
+async function getAllRooms(requestingUserID) {
+  const userSpaces = await getAllSpaces(requestingUserID)
+  const spaceIds = userSpaces.map(space => space._id)
+  return await Room.find({ space_id: { $in: spaceIds } })
 }
+
 // Returns an array of raw MongoDB database documents.
 async function getOneRoom(roomID) {
   return await Room.findOne({_id: roomID}).populate('space_id');
@@ -74,6 +77,7 @@ async function isRequestingUserAdmin(request) {
     return false;
   }
 }
+
 
 // --------------------------------------
 // ----- Exports

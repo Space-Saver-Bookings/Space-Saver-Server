@@ -31,7 +31,8 @@ const {NONAME} = require('dns');
  * @returns {Object} JSON response with space count and list of spaces.
  */
 router.get('/', verifyJwtHeader, async (request, response) => {
-  let allSpaces = await getAllSpaces();
+  const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+  let allSpaces = await getAllSpaces(requestingUserID);
   console.log(allSpaces);
 
   response.json({
@@ -124,7 +125,9 @@ router.put('/:spaceID', verifyJwtHeader, async (request, response) => {
     return response.json(updatedSpace);
   } catch (error) {
     console.error('Error:', error);
-    return response.status(500).json({error: 'Internal server error', reason: `${error.reason}`});
+    return response
+      .status(500)
+      .json({error: 'Internal server error', reason: `${error.reason}`});
   }
 });
 
@@ -169,7 +172,9 @@ router.delete('/:spaceID', verifyJwtHeader, async (request, response) => {
     return response.json({message: 'Space deleted successfully'});
   } catch (error) {
     console.error('Error:', error);
-    return response.status(500).json({error: 'Internal server error', reason: `${error.reason}`});
+    return response
+      .status(500)
+      .json({error: 'Internal server error', reason: `${error.reason}`});
   }
 });
 

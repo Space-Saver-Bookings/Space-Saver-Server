@@ -8,7 +8,7 @@
     "test-ci": "NODE_ENV=production jest --detectOpenHandles --ci --reporters='default' --reporters='./test/GithubActionsReporter.js'",
     "coverage": "NODE_ENV=development jest --coverage",
     "seed-dev": "NODE_ENV=development WIPE=true node src/seeds.js",
-    "seed-prod": "NODE_ENV=production WIPE=false node src/seeds.js",
+    "seed-prod": "NODE_ENV=production WIPE=true node src/seeds.js",
     "start-dev": "NODE_ENV=development nodemon src/index.js",
     "start-prod": "NODE_ENV=production node src/index.js"
   },

@@ -29,7 +29,7 @@ beforeEach(async () => {
   const delayDuration = 2000; // implement timeout
   await new Promise((resolve) => setTimeout(resolve, delayDuration));
   // Delete user before each test
-  const emailsToDelete = ['bob.johnson@example.com'];
+  const emailsToDelete = ['john.bobson@example.com'];
   for (email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
@@ -40,9 +40,9 @@ describe('Room Router', () => {
     test('should return an array of rooms', async () => {
       // Register a user and create a space for testing
       const registerResponse = await request(app).post('/users/register').send({
-        first_name: 'Bob',
-        last_name: 'Johnson',
-        email: 'bob.johnson@example.com',
+        first_name: 'John',
+        last_name: 'Bobson',
+        email: 'john.bobson@example.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -51,7 +51,7 @@ describe('Room Router', () => {
 
       // Log in the user and get the JWT
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'bob.johnson@example.com',
+        email: 'john.bobson@example.com',
         password: 'password123',
       });
 
@@ -62,7 +62,7 @@ describe('Room Router', () => {
 
       // Assertions
       expect(response.status).toBe(200);
-      expect(response.body.RoomCount).toBeGreaterThanOrEqual(0); // Assuming the created room is included
+      expect(response.body.RoomCount).toBeGreaterThanOrEqual(0);
       expect(response.body.Rooms).toBeInstanceOf(Array);
     });
   });
@@ -70,9 +70,9 @@ describe('Room Router', () => {
   describe('GET /rooms/:roomID', () => {
     test('should return details of a specific room', async () => {
       const registerResponse = await request(app).post('/users/register').send({
-        first_name: 'Bob',
-        last_name: 'Johnson',
-        email: 'bob.johnson@example.com',
+        first_name: 'John',
+        last_name: 'Bobson',
+        email: 'john.bobson@example.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -100,7 +100,7 @@ describe('Room Router', () => {
       const createdRoom = await createRoom(roomDetails);
       // Log in the user and get the JWT
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'bob.johnson@example.com',
+        email: 'john.bobson@example.com',
         password: 'password123',
       });
 
@@ -120,9 +120,9 @@ describe('Room Router', () => {
   describe('POST /rooms', () => {
     test('should create a new room', async () => {
       const registerResponse = await request(app).post('/users/register').send({
-        first_name: 'Bob',
-        last_name: 'Johnson',
-        email: 'bob.johnson@example.com',
+        first_name: 'John',
+        last_name: 'Bobson',
+        email: 'john.bobson@example.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -141,7 +141,7 @@ describe('Room Router', () => {
       const createdSpace = await createSpace(spaceDetails);
 
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'bob.johnson@example.com',
+        email: 'john.bobson@example.com',
         password: 'password123',
       });
 
@@ -168,9 +168,9 @@ describe('Room Router', () => {
   describe('PUT /rooms/:roomID', () => {
     test('should update details of a specific room', async () => {
       const registerResponse = await request(app).post('/users/register').send({
-        first_name: 'Bob',
-        last_name: 'Johnson',
-        email: 'bob.johnson@example.com',
+        first_name: 'John',
+        last_name: 'Bobson',
+        email: 'john.bobson@example.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -198,7 +198,7 @@ describe('Room Router', () => {
       const createdRoom = await createRoom(roomDetails);
       // Log in the user and get the JWT
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'bob.johnson@example.com',
+        email: 'john.bobson@example.com',
         password: 'password123',
       });
 
@@ -223,9 +223,9 @@ describe('Room Router', () => {
   describe('DELETE /rooms/:roomID', () => {
     test('should delete a specific room', async () => {
       const registerResponse = await request(app).post('/users/register').send({
-        first_name: 'Bob',
-        last_name: 'Johnson',
-        email: 'bob.johnson@example.com',
+        first_name: 'John',
+        last_name: 'Bobson',
+        email: 'john.bobson@example.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -253,7 +253,7 @@ describe('Room Router', () => {
       const createdRoom = await createRoom(roomDetails);
       // Log in the user and get the JWT
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'bob.johnson@example.com',
+        email: 'john.bobson@example.com',
         password: 'password123',
       });
 

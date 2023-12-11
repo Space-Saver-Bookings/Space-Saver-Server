@@ -71,7 +71,7 @@ describe('Space Router', () => {
 
       // Assertions
       expect(response.status).toBe(200);
-      expect(response.body.spaceCount).toBeGreaterThanOrEqual(1); // Assuming the created space is included
+      expect(response.body.spaceCount).toBeGreaterThanOrEqual(1);
       expect(response.body.spaces).toBeInstanceOf(Array);
     });
   });

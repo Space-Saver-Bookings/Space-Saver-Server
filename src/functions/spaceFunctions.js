@@ -1,12 +1,15 @@
 const {Space} = require('../models/SpaceModel');
-
 // --------------------------------------
 // ----- MongoDB/MongooseJS functionality
 
-// Returns an array of raw MongoDB database documents.
-async function getAllSpaces() {
-  return await Space.find({}).populate(['user_ids', 'admin_id']);
+async function getAllSpaces(requestingUserID) {
+  let spaces = await Space.find({
+    $or: [{user_ids: requestingUserID}, {admin_id: requestingUserID}],
+  });
+
+  return spaces;
 }
+
 // Returns an array of raw MongoDB database documents.
 async function getOneSpace(spaceID) {
   return await Space.findOne({_id: spaceID});
@@ -61,7 +64,7 @@ async function generateAccessCode() {
     // Check if the generated code already exists in the database
     const existingSpace = await Space.findOne({
       invite_code: accessCode,
-    })
+    });
 
     if (!existingSpace) {
       return accessCode; // Return the code if it's unique
@@ -74,11 +77,11 @@ async function generateAccessCode() {
 // ----- Exports
 
 module.exports = {
-    getAllSpaces,
-    getOneSpace,
-    createSpace,
-    updateSpace,
-    deleteSpace,
+  getAllSpaces,
+  getOneSpace,
+  createSpace,
+  updateSpace,
+  deleteSpace,
   filterUndefinedProperties,
-    generateAccessCode
+  generateAccessCode,
 };

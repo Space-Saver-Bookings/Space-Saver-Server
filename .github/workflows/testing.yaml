@@ -15,6 +15,7 @@ jobs:
       PROD_DB_URL: ${{ secrets.PROD_DB_URL }}
       ENC_KEY: ${{ secrets.ENC_KEY }}
       ENC_IV: ${{ secrets.ENC_IV }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
       CI: true
 
     steps:

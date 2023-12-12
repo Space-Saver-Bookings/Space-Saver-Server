@@ -15,97 +15,126 @@ const {
   deleteBooking,
   filterUndefinedProperties,
   validateRoomBelongsToUser,
+  validateUserPermission,
 } = require('../functions/bookingFunctions');
 const {getUserIdFromJwt} = require('../functions/userFunctions');
-const {getAllRooms} = require('../functions/roomFunctions');
+const {filterBookingsMiddleware} = require('../middleware/filterMiddleware');
 
 // List all bookings
-router.get('/', verifyJwtHeader, async (request, response) => {
-  try {
-    const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+router.get(
+  '/',
+  verifyJwtHeader,
+  filterBookingsMiddleware,
+  async (request, response, next) => {
+    try {
+      // Access the filtered bookings from the request object after middleware execution
+      const allBookings = request.filteredBookings;
 
-    const allBookings = await getAllBookings(requestingUserID);
-
-    response.json({
-      bookingCount: allBookings.length,
-      bookings: allBookings,
-    });
-  } catch (error) {
-    console.error('Error:', error);
-    response.status(500).json({error: 'Internal Server Error'});
-  }
-});
-
-// Show a specific booking
-router.get('/:bookingID', verifyJwtHeader, async (request, response) => {
-  try {
-    const booking = await getOneBooking(request.params.bookingID);
-    if (!booking) {
-      return response.status(404).json({message: 'Booking not found'});
+      response.json({
+        bookingCount: allBookings.length,
+        bookings: allBookings,
+      });
+    } catch (error) {
+      next(error);
     }
-    return response.json(booking);
-  } catch (error) {
-    console.error('Error:', error);
-    response.status(500).json({error: 'Internal Server Error'});
   }
-});
+);
+
+router.get(
+  '/:bookingID',
+  verifyJwtHeader,
+  filterBookingsMiddleware,
+  async (request, response, next) => {
+    try {
+      const filteredBookings = request.filteredBookings;
+      const bookingID = request.params.bookingID;
+
+      const booking = filteredBookings.find(
+        (booking) => booking._id.toString() === bookingID
+      );
+      if (!booking) {
+        return response.status(404).json({message: 'Booking not found'});
+      }
+      return response.json(booking);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 // Create a new booking
-router.post('/', verifyJwtHeader, async (request, response) => {
+router.post('/', verifyJwtHeader, async (request, response, next) => {
   const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
   const roomID = request.body.room_id;
   const validation = await validateRoomBelongsToUser(roomID, requestingUserID);
 
-  if (validation) {
-    try {
-      const bookingDetails = {
-        room_id: roomID,
-        primary_user_id: request.body.primary_user_id ?? requestingUserID,
-        invited_user_ids: request.body.invited_user_ids || [],
-        title: request.body.title,
-        description: request.body.description,
-        start_time: request.body.start_time,
-        end_time: request.body.end_time,
-      };
+  try {
+    if (validation) {
+      try {
+        const bookingDetails = {
+          room_id: roomID,
+          primary_user_id: request.body.primary_user_id ?? requestingUserID,
+          invited_user_ids: request.body.invited_user_ids || [],
+          title: request.body.title,
+          description: request.body.description,
+          start_time: request.body.start_time,
+          end_time: request.body.end_time,
+        };
 
-      newBookingDoc = await createBooking(bookingDetails);
+        newBookingDoc = await createBooking(bookingDetails);
 
-      response.status(201).json({
-        booking: newBookingDoc,
-      });
-    } catch (error) {
+        response.status(201).json({
+          booking: newBookingDoc,
+        });
+      } catch (error) {
+        response
+          .status(400)
+          .json({error: error.message, valueGiven: error.value});
+      }
+    } else {
       response
         .status(400)
-        .json({error: error.message, valueGiven: error.value});
+        .json({message: `Could not find room with id: ${roomID}`});
     }
-  } else {
-    response
-      .status(400)
-      .json({message: `Could not find room with id: ${roomID}`});
+  } catch (error) {
+    next(error);
   }
 });
 
 // Update a specific booking
-router.put('/:bookingID', verifyJwtHeader, async (request, response) => {
+router.put('/:bookingID', verifyJwtHeader, async (request, response, next) => {
   const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
 
-  // Validate if the room_id is present in request.body
-  if ('room_id' in request.body) {
-    const roomID = request.body.room_id;
-    // Validate if the room belongs to the user
-    const validation = await validateRoomBelongsToUser(
-      roomID,
-      requestingUserID
-    );
-
-    if (!validation) {
-      return response
-        .status(400)
-        .json({message: `Could not find room with id: ${roomID}`});
-    }
-  }
-
   try {
+    const booking = await getOneBooking(request.params.bookingID);
+
+    if (!booking) {
+      return response.status(404).json({ message: 'Booking not found' });
+    }
+
+    if (!validateUserPermission(booking, requestingUserID)) {
+      return response.status(403).json({
+        error: 'Forbidden',
+        message: 'You do not have permission to update this booking',
+      });
+    }
+
+    // Validate if the room_id is present in request.body
+    if ('room_id' in request.body) {
+      const roomID = request.body.room_id;
+      // Validate if the room belongs to the user
+      const validation = await validateRoomBelongsToUser(
+        roomID,
+        requestingUserID
+      );
+
+      if (!validation) {
+        return response
+          .status(400)
+          .json({ message: `Could not find room with id: ${roomID}` });
+      }
+    }
+
     const {
       room_id,
       primary_user_id,
@@ -130,29 +159,28 @@ router.put('/:bookingID', verifyJwtHeader, async (request, response) => {
     const updatedBooking = await updateBooking(roomDetails);
 
     if (!updatedBooking) {
-      return response.status(404).json({message: 'Booking not found'});
+      return response.status(404).json({ message: 'Booking not found' });
     }
 
     response.json(updatedBooking);
   } catch (error) {
-    console.error('Error:', error);
-    response.status(500).json({error: error.message});
+    next(error)
   }
 });
 
+
 // Delete a specific booking
-router.delete('/:bookingID', verifyJwtHeader, async (request, response) => {
+router.delete('/:bookingID', verifyJwtHeader, async (request, response, next) => {
   const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
 
   try {
     const booking = await getOneBooking(request.params.bookingID);
 
     if (!booking) {
-      return response.status(404).json({message: 'Booking not found'});
+      return response.status(404).json({ message: 'Booking not found' });
     }
 
-    // Check if the requesting user is the primary_user_id
-    if (booking.primary_user_id.equals(requestingUserID)) {
+    if (validateUserPermission(booking, requestingUserID)) {
       const deletedBooking = await deleteBooking(request.params.bookingID);
       response.json({
         message: 'Booking deleted successfully',
@@ -160,12 +188,11 @@ router.delete('/:bookingID', verifyJwtHeader, async (request, response) => {
       });
     } else {
       response.status(403).json({
-        message: 'Cannot delete booking. You are not the primary user.',
+        message: 'Unauthorised. You do not have permission.',
       });
     }
   } catch (error) {
-    console.error('Error:', error);
-    response.status(500).json({error: 'Internal Server Error'});
+    next(error)
   }
 });
 

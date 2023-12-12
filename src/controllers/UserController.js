@@ -23,54 +23,41 @@ const {
   filterUndefinedProperties,
 } = require('../functions/userFunctions');
 
-const {verifyJwtHeader} = require('../middleware/sharedMiddleware');
-
-// Validate user email uniqueness
-const uniqueEmailCheck = async (request, response, next) => {
-  let isEmailInUse = await User.exists({email: request.body.email}).exec();
-  if (isEmailInUse) {
-    next(new Error('An account with this email address already exists.'));
-  } else {
-    next();
-  }
-};
-
-// If any errors are detected, end the route early
-// and respond with the error message
-const handleErrors = async (error, request, response, next) => {
-  if (error) {
-    response.status(500).json({
-      error: error.message,
-    });
-  } else {
-    next();
-  }
-};
+const {
+  verifyJwtHeader,
+  handleErrors,
+  uniqueEmailCheck,
+} = require('../middleware/sharedMiddleware');
+const {filterUsersMiddleware} = require('../middleware/filterMiddleware');
 
 // Sign-up a new user
 router.post(
   '/register',
   uniqueEmailCheck,
   handleErrors,
-  async (request, response) => {
-    const userDetails = {
-      first_name: request.body.first_name,
-      last_name: request.body.last_name,
-      email: request.body.email,
-      password: request.body.password,
-      post_code: request.body.post_code,
-      country: request.body.country,
-      position: request.body.position,
-    };
-    let newUserDoc = await createUser(userDetails);
+  async (request, response, next) => {
+    try {
+      const userDetails = {
+        first_name: request.body.first_name,
+        last_name: request.body.last_name,
+        email: request.body.email,
+        password: request.body.password,
+        post_code: request.body.post_code,
+        country: request.body.country,
+        position: request.body.position,
+      };
+      let newUserDoc = await createUser(userDetails);
 
-    response.json({
-      user: newUserDoc,
-    });
+      response.json({
+        user: newUserDoc,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
 );
 
-router.post('/login', async (request, response) => {
+router.post('/login', async (request, response, next) => {
   try {
     let targetUser = await User.findOne({email: request.body.email}).exec();
 
@@ -89,60 +76,76 @@ router.post('/login', async (request, response) => {
       response.status(401).json({message: 'Invalid password.'});
     }
   } catch (error) {
-    console.error(error);
-    response.status(500).json({message: 'Internal server error.'});
+    next(error);
   }
 });
 
 // Extend a user's JWT validity
-router.post('/token-refresh', async (request, response) => {
+router.post('/token-refresh', async (request, response, next) => {
   try {
     let oldToken = request.body.jwt;
     let refreshResult = await verifyUserJWT(oldToken);
     response.json({jwt: refreshResult});
   } catch (error) {
-    console.error(error);
-    response.status(400).json({error: error.message});
+    next(error);
   }
 });
 
 // List all users
-router.get('/', verifyJwtHeader, async (request, response) => {
-  let allUsers = await getAllUsers();
+router.get(
+  '/',
+  verifyJwtHeader,
+  filterUsersMiddleware,
+  async (request, response, next) => {
+    try {
+      const filteredUsers = request.filteredUsers;
 
-  response.json({
-    userCount: allUsers.length,
-    users: allUsers,
-  });
-});
+      response.json({
+        userCount: filteredUsers.length,
+        users: filteredUsers,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 // Show a specific user
 router.get(
   '/:userID',
   verifyJwtHeader,
-  handleErrors,
-  async (request, response) => {
+  filterUsersMiddleware,
+  async (request, response, next) => {
     try {
-      const user = await User.findOne({_id: request.params.userID});
+      const userIdParam = request.params.userID;
+      const filteredUsers = request.filteredUsers;
+
+      // Find the user with the specified ID in the filtered list
+      const user = filteredUsers.find((user) => user._id.equals(userIdParam));
+
       if (!user) {
         return response.status(404).json({message: 'User not found'});
       }
+      // Respond with the filtered user
       return response.json(user);
     } catch (error) {
-      if (error.path === '_id') {
-        return response.status(404).json({message: 'User not found'});
-      }
-      console.error('Error:', error);
-      return response
-        .status(500)
-        .json({error: 'Internal server error', reason: error});
+      next(error);
     }
   }
 );
 
 // Update a user
-router.put('/:userID', async (request, response) => {
+router.put('/:userID', handleErrors, async (request, response, next) => {
   try {
+    const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+
+    // Ensure that the user can only update their own account
+    if (requestingUserID !== request.params.userID) {
+      return response
+        .status(403)
+        .json({message: 'Unauthorised: You can only update your own account'});
+    }
+
     const {
       first_name,
       last_name,
@@ -177,16 +180,13 @@ router.put('/:userID', async (request, response) => {
     if (error.path === '_id') {
       return response.status(404).json({message: 'User not found'});
     }
-    console.error('Error:', error);
-    return response
-      .status(500)
-      .json({error: 'Internal server error', reason: error.reason});
+    next(error);
   }
 });
 
 // Delete user account
 // Will only delete user if the requester is the userID
-router.delete('/:userID', verifyJwtHeader, async (request, response) => {
+router.delete('/:userID', verifyJwtHeader, async (request, response, next) => {
   try {
     const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
     const targetUserID = request.params.userID;
@@ -194,7 +194,7 @@ router.delete('/:userID', verifyJwtHeader, async (request, response) => {
     // Check if the user making the request is the same as the user whose data is being deleted
     if (requestingUserID !== targetUserID) {
       return response.status(403).json({
-        error: 'Unauthorized. You can only delete your own account.',
+        message: 'Unauthorised. You can only delete your own account.',
       });
     }
 
@@ -210,8 +210,7 @@ router.delete('/:userID', verifyJwtHeader, async (request, response) => {
     if (error.path === '_id') {
       return response.status(404).json({message: 'User not found'});
     }
-    console.error('Error:', error);
-    return response.status(500).json({error: 'Internal server error'});
+    next(error);
   }
 });
 

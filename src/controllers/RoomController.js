@@ -2,7 +2,10 @@
 const express = require('express');
 
 const {Room} = require('../models/RoomModel');
-const {verifyJwtHeader} = require('../middleware/sharedMiddleware');
+const {
+  verifyJwtHeader,
+  handleErrors,
+} = require('../middleware/sharedMiddleware');
 
 // make an instance of a Router
 const router = express.Router();
@@ -18,47 +21,56 @@ const {
 } = require('../functions/roomFunctions');
 const {getOneSpace} = require('../functions/spaceFunctions');
 const {getUserIdFromJwt} = require('../functions/userFunctions');
+const {filterRoomsMiddleware} = require('../middleware/filterMiddleware');
 
 // List all rooms, optionally filtered by space_id
-router.get('/', verifyJwtHeader, async (request, response) => {
-  try {
-    const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+router.get(
+  '/',
+  verifyJwtHeader,
+  filterRoomsMiddleware,
+  async (request, response, next) => {
+    try {
+      const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
 
-    let allRooms = null;
+      let allRooms = null;
 
-    allRooms = await getAllRooms(requestingUserID);
+      allRooms = await getAllRooms(requestingUserID);
 
-    response.json({
-      roomCount: allRooms.length,
-      rooms: allRooms,
-    });
-  } catch (error) {
-    console.error(error);
-    response.status(500).json({error: 'Internal Server Error'});
+      response.json({
+        roomCount: allRooms.length,
+        rooms: allRooms,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // Show a specific room
-router.get('/:roomID', verifyJwtHeader, async (request, response) => {
-  try {
-    const room = await Room.findOne({_id: request.params.roomID}).populate(
-      'space_id'
-    );
-    if (!room) {
-      return response.status(404).json({message: 'Room not found'});
+router.get(
+  '/:roomID',
+  verifyJwtHeader,
+  filterRoomsMiddleware,
+  async (request, response, next) => {
+    try {
+      const room = await Room.findOne({_id: request.params.roomID}).populate(
+        'space_id'
+      );
+      if (!room) {
+        return response.status(404).json({message: 'Room not found'});
+      }
+      return response.json(room);
+    } catch (error) {
+      next(error);
     }
-    return response.json(room);
-  } catch (error) {
-    console.error('Error:', error);
-    return response.status(500).json({error: 'Internal server error'});
   }
-});
+);
 
 // Create a new room
-router.post('/', verifyJwtHeader, async (request, response) => {
+router.post('/', verifyJwtHeader, async (request, response, next) => {
   if (!(await isRequestingUserAdmin(request))) {
     response.status(403).json({
-      error: `Unauthorized. User is not administrator for space: ${request.body.space_id}`,
+      error: `Unauthorised. User is not administrator for space: ${request.body.space_id}`,
     });
   }
 
@@ -73,7 +85,7 @@ router.post('/', verifyJwtHeader, async (request, response) => {
   try {
     newRoomDoc = await createRoom(roomDetails);
   } catch (error) {
-    return response.json({error: error.reason});
+    next(error);
   }
 
   response.status(201).json({
@@ -84,7 +96,7 @@ router.post('/', verifyJwtHeader, async (request, response) => {
 router.put('/:roomID', verifyJwtHeader, async (request, response) => {
   if (!(await isRequestingUserAdmin(request))) {
     return response.status(403).json({
-      error: `Unauthorized. User is not administrator for room: ${request.params.roomID}`,
+      error: `Unauthorised. User is not administrator for room: ${request.params.roomID}`,
     });
   }
   {
@@ -119,7 +131,7 @@ router.delete('/:roomID', verifyJwtHeader, async (request, response) => {
   const targetRoomID = request.params.roomID;
   if (!(await isRequestingUserAdmin(request))) {
     return response.status(403).json({
-      error: `Unauthorized. User is not administrator for room: ${targetRoomID}`,
+      error: `Unauthorised. User is not administrator for room: ${targetRoomID}`,
     });
   }
   try {

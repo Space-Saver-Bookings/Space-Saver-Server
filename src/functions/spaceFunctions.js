@@ -30,8 +30,19 @@ async function createSpace(spaceDetails) {
   return await newSpace.save();
 }
 
-async function updateSpace(spaceDetails) {
+async function updateSpace(spaceDetails, requestingUserID) {
   // Find space, update it, return the updated space data.
+  const space = await Space.findOne({_id: spaceDetails.spaceID});
+
+  // Check if the requesting user is the admin of the space
+  if (!space) {
+    return null; // Space not found
+  }
+
+  if (!space.admin_id.equals(requestingUserID)) {
+    return null; // Permission denied
+  }
+
   return await Space.findByIdAndUpdate(
     spaceDetails.spaceID,
     spaceDetails.updatedData,
@@ -39,9 +50,23 @@ async function updateSpace(spaceDetails) {
   ).exec();
 }
 
-async function deleteSpace(spaceID) {
+
+async function deleteSpace(spaceID, requestingUserID) {
+  const space = await Space.findOne({_id: spaceID});
+
+  // Check if the requesting user is the admin of the space
+  if (!space) {
+    return null; // Space not found
+  }
+
+  if (!space.admin_id.equals(requestingUserID)) {
+    return null; // Permission denied
+  }
+
+  // Proceed with the delete operation
   return await Space.findByIdAndDelete(spaceID).exec();
 }
+
 
 function filterUndefinedProperties(obj) {
   return Object.fromEntries(

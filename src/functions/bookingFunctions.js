@@ -63,6 +63,17 @@ async function validateRoomBelongsToUser(roomID, requestingUserID) {
   }
 }
 
+const validateUserPermission = (booking, requestingUserID) => {
+  if (
+    requestingUserID !== booking.primary_user_id.toString() &&
+    !booking.invited_user_ids
+      .map((id) => id.toString())
+      .includes(requestingUserID)
+  ) {
+    return false;
+  }
+  return true;
+};
 // --------------------------------------
 // ----- Exports
 
@@ -74,4 +85,5 @@ module.exports = {
   deleteBooking,
   filterUndefinedProperties,
   validateRoomBelongsToUser,
+  validateUserPermission
 };

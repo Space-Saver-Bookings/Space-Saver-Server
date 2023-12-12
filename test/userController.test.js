@@ -2,10 +2,12 @@ const request = require('supertest');
 const {app} = require('../src/server');
 
 const {User} = require('../src/models/UserModel');
+const {deleteUserByEmail} = require('../src/functions/userFunctions');
 const {
-  deleteUserByEmail,
-} = require('../src/functions/userFunctions');
-const { getDatabaseURL, databaseConnector, databaseDisconnector } = require('../src/database');
+  getDatabaseURL,
+  databaseConnector,
+  databaseDisconnector,
+} = require('../src/database');
 
 // Ensure the users don't exist before tests
 beforeAll(async () => {
@@ -236,7 +238,7 @@ describe('User Router', () => {
       expect(response.status).toBe(403);
     });
 
-    it('should handle unauthorized deletion', async () => {
+    it('should handle Unauthorised deletion', async () => {
       // Register another user
       await request(app).post('/users/register').send({
         first_name: 'Bob',

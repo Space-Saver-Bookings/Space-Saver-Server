@@ -1,8 +1,10 @@
 const {getAllRooms} = require('../functions/roomFunctions');
 const {getAllSpaces} = require('../functions/spaceFunctions');
 const {getUserIdFromJwt} = require('../functions/userFunctions');
+const {Booking} = require('../models/BookingModel');
 const {Room} = require('../models/RoomModel');
 const {User} = require('../models/UserModel');
+const {handleErrors} = require('./sharedMiddleware');
 
 const filterUsersMiddleware = async (request, response, next) => {
   try {
@@ -60,9 +62,7 @@ const filterUsersMiddleware = async (request, response, next) => {
 
     next(); // Move to the next middleware or route handler
   } catch (error) {
-    // Handle errors appropriately
-    console.error(error);
-    response.status(500).send('Internal Server Error');
+    handleErrors(error, request, response, next);
   }
 };
 
@@ -83,9 +83,7 @@ const filterSpacesMiddleware = async (request, response, next) => {
 
     next(); // Move to the next middleware or route handler
   } catch (error) {
-    // Handle errors appropriately
-    console.error(error);
-    response.status(500).send('Internal Server Error');
+    handleErrors(error, request, response, next);
   }
 };
 
@@ -103,27 +101,22 @@ const filterRoomsMiddleware = async (request, response, next) => {
 
     next();
   } catch (error) {
-    console.error(error);
-    response.status(500).send('Internal Server Error');
+    handleErrors(error, request, response, next);
   }
 };
 
-const filterBookingsMiddleware = async (req, res, next) => {
+const filterBookingsMiddleware = async (request, response, next) => {
   try {
-    // Assuming requestingUserID is part of the request object, adjust accordingly
-    const requestingUserID = req.user.id; // Example, modify based on your authentication strategy
+    const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
 
     const userRooms = await getAllRooms(requestingUserID);
     const roomIds = userRooms.map((room) => room._id);
 
-    // Modify the request object or response object based on your filtering criteria
-    req.filteredBookings = await Booking.find({room_id: {$in: roomIds}});
+    request.filteredBookings = await Booking.find({room_id: {$in: roomIds}});
 
-    next(); // Move to the next middleware or route handler
+    next();
   } catch (error) {
-    // Handle errors appropriately
-    console.error(error);
-    res.status(500).send('Internal Server Error');
+    handleErrors(error, request, response, next);
   }
 };
 

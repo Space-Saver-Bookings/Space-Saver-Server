@@ -143,7 +143,7 @@ router.put('/:userID', handleErrors, async (request, response, next) => {
     if (requestingUserID !== request.params.userID) {
       return response
         .status(403)
-        .json({message: 'Unauthorized: You can only update your own account'});
+        .json({message: 'Unauthorised: You can only update your own account'});
     }
 
     const {
@@ -194,7 +194,7 @@ router.delete('/:userID', verifyJwtHeader, async (request, response, next) => {
     // Check if the user making the request is the same as the user whose data is being deleted
     if (requestingUserID !== targetUserID) {
       return response.status(403).json({
-        message: 'Unauthorized. You can only delete your own account.',
+        message: 'Unauthorised. You can only delete your own account.',
       });
     }
 

@@ -41,7 +41,7 @@ router.get(
         rooms: allRooms,
       });
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 );
@@ -70,7 +70,7 @@ router.get(
 router.post('/', verifyJwtHeader, async (request, response, next) => {
   if (!(await isRequestingUserAdmin(request))) {
     response.status(403).json({
-      error: `Unauthorized. User is not administrator for space: ${request.body.space_id}`,
+      error: `Unauthorised. User is not administrator for space: ${request.body.space_id}`,
     });
   }
 
@@ -85,7 +85,7 @@ router.post('/', verifyJwtHeader, async (request, response, next) => {
   try {
     newRoomDoc = await createRoom(roomDetails);
   } catch (error) {
-    next(error)
+    next(error);
   }
 
   response.status(201).json({
@@ -96,7 +96,7 @@ router.post('/', verifyJwtHeader, async (request, response, next) => {
 router.put('/:roomID', verifyJwtHeader, async (request, response) => {
   if (!(await isRequestingUserAdmin(request))) {
     return response.status(403).json({
-      error: `Unauthorized. User is not administrator for room: ${request.params.roomID}`,
+      error: `Unauthorised. User is not administrator for room: ${request.params.roomID}`,
     });
   }
   {
@@ -131,7 +131,7 @@ router.delete('/:roomID', verifyJwtHeader, async (request, response) => {
   const targetRoomID = request.params.roomID;
   if (!(await isRequestingUserAdmin(request))) {
     return response.status(403).json({
-      error: `Unauthorized. User is not administrator for room: ${targetRoomID}`,
+      error: `Unauthorised. User is not administrator for room: ${targetRoomID}`,
     });
   }
   try {

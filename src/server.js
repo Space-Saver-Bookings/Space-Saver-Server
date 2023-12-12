@@ -40,9 +40,7 @@ const databaseURL = getDatabaseURL(process.env.NODE_ENV);
 
 databaseConnector(databaseURL)
   .then(() => {
-    console.log(
-      `Database connected successfully! \n Port: ${PORT}`
-    );
+    console.log(`Database connected successfully! \n Port: ${PORT}`);
   })
   .catch((error) => {
     console.log(`
@@ -51,17 +49,17 @@ databaseConnector(databaseURL)
     `);
   });
 
-const userController = require("./controllers/UserController")
-app.use('/users', userController)
+const userController = require('./controllers/UserController');
+app.use('/users', userController);
 
-const spaceController = require("./controllers/SpaceController")
-app.use('/spaces', spaceController)
+const spaceController = require('./controllers/SpaceController');
+app.use('/spaces', spaceController);
 
-const roomController = require("./controllers/RoomController")
-app.use('/rooms', roomController)
+const roomController = require('./controllers/RoomController');
+app.use('/rooms', roomController);
 
-const bookingController = require("./controllers/BookingController")
-app.use('/bookings', bookingController)
+const bookingController = require('./controllers/BookingController');
+app.use('/bookings', bookingController);
 
 // handle all other routes --> leave at bottom of page
 app.get('*', (request, response) => {
@@ -70,6 +68,10 @@ app.get('*', (request, response) => {
     attemptedPath: request.path,
   });
 });
+
+// use handleErrors middleware
+const {handleErrors} = require('./middleware/sharedMiddleware');
+app.use(handleErrors);
 
 module.exports = {
   PORT,

@@ -1,11 +1,15 @@
 const {getAllRooms} = require('../functions/roomFunctions');
 const {getAllSpaces} = require('../functions/spaceFunctions');
 const {getUserIdFromJwt} = require('../functions/userFunctions');
+const { Room } = require('../models/RoomModel');
 const {User} = require('../models/UserModel');
 
 const filterUsersMiddleware = async (request, response, next) => {
   try {
     const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+
+    // Retrieve details of the user who made the request
+    const requestingUser = await User.findById(requestingUserID);
 
     const userSpaces = await getAllSpaces(requestingUserID);
 
@@ -21,24 +25,38 @@ const filterUsersMiddleware = async (request, response, next) => {
     // Fetch users based on unique user_ids
     const filteredUsers = await User.find({_id: {$in: uniqueUserIds}});
 
-    // Append space_id(s) to each user object and remove __v field
-    const usersWithSpaceId = filteredUsers.map((user) => {
-      const spaceIdsForUser = userSpaces
-        .filter(
-          (space) =>
-            space.admin_id.equals(user._id) ||
-            space.user_ids.some((id) => id.equals(user._id))
-        )
+    // Check if the requesting user is already in the filtered list
+    const isRequestingUserInList = filteredUsers.some((user) =>
+      user._id.equals(requestingUser._id)
+    );
+
+    // If not in the list, append the requesting user
+    if (!isRequestingUserInList) {
+      // Append space_id(s) to each user object and remove __v field
+      const usersWithSpaceId = filteredUsers.map((user) => {
+        const spaceIdsForUser = userSpaces
+          .filter(
+            (space) =>
+              space.admin_id.equals(user._id) ||
+              space.user_ids.some((id) => id.equals(user._id))
+          )
           .map((space) => space._id);
-        
-      // Omitting __v and password fields from the user object
-      const {__v, password, ...userWithoutVAndPassword} = user.toObject();
 
-      return {...userWithoutVAndPassword, space_ids: spaceIdsForUser};
-    });
+        // Omitting __v and password fields from the user object
+        const {__v, password, ...userWithoutVAndPassword} = user.toObject();
 
-    // Modify the request object or response object based on your filtering criteria
-    request.filteredUsers = usersWithSpaceId;
+        return {...userWithoutVAndPassword, space_ids: spaceIdsForUser};
+      });
+
+      // Append details of the requesting user to the filtered user list
+      const usersWithRequestingUser = [...usersWithSpaceId, requestingUser];
+
+      // Modify the request object or response object based on your filtering criteria
+      request.filteredUsers = usersWithRequestingUser;
+    } else {
+      // If the requesting user is already in the list, use the original filteredUsers array
+      request.filteredUsers = filteredUsers;
+    }
 
     next(); // Move to the next middleware or route handler
   } catch (error) {
@@ -48,21 +66,23 @@ const filterUsersMiddleware = async (request, response, next) => {
   }
 };
 
-const filterRoomsMiddleware = async (req, res, next) => {
+const filterRoomsMiddleware = async (request, response, next) => {
   try {
-    const requestingUserID = req.user.id; // Adjust based on your authentication strategy
+    const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
 
     const userSpaces = await getAllSpaces(requestingUserID);
     const spaceIds = userSpaces.map((space) => space._id);
 
-    // Modify the request object or response object based on your filtering criteria
-    req.filteredRooms = await Room.find({space_id: {$in: spaceIds}});
+    // Fetch rooms with at least one matching space ID
+    request.filteredRooms = await Room.find({
+      space_id: {$in: spaceIds},
+    });
 
-    next(); // Move to the next middleware or route handler
+    next(); 
   } catch (error) {
-    // Handle errors appropriately
+
     console.error(error);
-    res.status(500).send('Internal Server Error');
+    response.status(500).send('Internal Server Error');
   }
 };
 

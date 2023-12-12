@@ -19,6 +19,7 @@ const {
 const {getUserIdFromJwt} = require('../functions/userFunctions');
 const {getAllRooms} = require('../functions/roomFunctions');
 
+
 // List all bookings
 router.get('/', verifyJwtHeader, async (request, response) => {
   try {

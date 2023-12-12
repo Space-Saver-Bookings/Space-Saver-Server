@@ -23,29 +23,12 @@ const {
   filterUndefinedProperties,
 } = require('../functions/userFunctions');
 
-const {verifyJwtHeader} = require('../middleware/sharedMiddleware');
-
-// Validate user email uniqueness
-const uniqueEmailCheck = async (request, response, next) => {
-  let isEmailInUse = await User.exists({email: request.body.email}).exec();
-  if (isEmailInUse) {
-    next(new Error('An account with this email address already exists.'));
-  } else {
-    next();
-  }
-};
-
-// If any errors are detected, end the route early
-// and respond with the error message
-const handleErrors = async (error, request, response, next) => {
-  if (error) {
-    response.status(500).json({
-      error: error.message,
-    });
-  } else {
-    next();
-  }
-};
+const {
+  verifyJwtHeader,
+  handleErrors,
+  uniqueEmailCheck,
+} = require('../middleware/sharedMiddleware');
+const {filterUsersMiddleware} = require('../middleware/filterMiddleware');
 
 // Sign-up a new user
 router.post(
@@ -107,31 +90,41 @@ router.post('/token-refresh', async (request, response) => {
 });
 
 // List all users
-router.get('/', verifyJwtHeader, async (request, response) => {
-  let allUsers = await getAllUsers();
+router.get(
+  '/',
+  verifyJwtHeader,
+  filterUsersMiddleware,
+  handleErrors,
+  async (request, response) => {
+    const filteredUsers = request.filteredUsers;
 
-  response.json({
-    userCount: allUsers.length,
-    users: allUsers,
-  });
-});
+    response.json({
+      userCount: filteredUsers.length,
+      users: filteredUsers,
+    });
+  }
+);
 
 // Show a specific user
 router.get(
   '/:userID',
   verifyJwtHeader,
+  filterUsersMiddleware,
   handleErrors,
   async (request, response) => {
     try {
-      const user = await User.findOne({_id: request.params.userID});
+      const userIdParam = request.params.userID;
+      const filteredUsers = request.filteredUsers;
+
+      // Find the user with the specified ID in the filtered list
+      const user = filteredUsers.find((user) => user._id.equals(userIdParam));
+
       if (!user) {
         return response.status(404).json({message: 'User not found'});
       }
+      // Respond with the filtered user
       return response.json(user);
     } catch (error) {
-      if (error.path === '_id') {
-        return response.status(404).json({message: 'User not found'});
-      }
       console.error('Error:', error);
       return response
         .status(500)
@@ -141,8 +134,17 @@ router.get(
 );
 
 // Update a user
-router.put('/:userID', async (request, response) => {
+router.put('/:userID', handleErrors, async (request, response) => {
   try {
+    const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+
+    // Ensure that the user can only update their own account
+    if (requestingUserID !== request.params.userID) {
+      return response
+        .status(403)
+        .json({message: 'Unauthorized: You can only update your own account'});
+    }
+
     const {
       first_name,
       last_name,

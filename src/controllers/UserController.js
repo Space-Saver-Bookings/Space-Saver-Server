@@ -129,7 +129,7 @@ router.get(
       // Respond with the filtered user
       return response.json(user);
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 );
@@ -180,7 +180,7 @@ router.put('/:userID', handleErrors, async (request, response, next) => {
     if (error.path === '_id') {
       return response.status(404).json({message: 'User not found'});
     }
-    next(error)
+    next(error);
   }
 });
 
@@ -210,7 +210,7 @@ router.delete('/:userID', verifyJwtHeader, async (request, response, next) => {
     if (error.path === '_id') {
       return response.status(404).json({message: 'User not found'});
     }
-    next(error)
+    next(error);
   }
 });
 

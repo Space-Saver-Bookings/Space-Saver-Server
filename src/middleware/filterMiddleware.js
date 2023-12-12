@@ -1,7 +1,7 @@
 const {getAllRooms} = require('../functions/roomFunctions');
 const {getAllSpaces} = require('../functions/spaceFunctions');
 const {getUserIdFromJwt} = require('../functions/userFunctions');
-const { Room } = require('../models/RoomModel');
+const {Room} = require('../models/RoomModel');
 const {User} = require('../models/UserModel');
 
 const filterUsersMiddleware = async (request, response, next) => {
@@ -66,6 +66,29 @@ const filterUsersMiddleware = async (request, response, next) => {
   }
 };
 
+const filterSpacesMiddleware = async (request, response, next) => {
+  try {
+    const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+
+    const userSpaces = await getAllSpaces(requestingUserID);
+
+    // Filter spaces where the user is an admin or part of user_ids
+    const filteredSpaces = userSpaces.map((space) => {
+      const {__v, ...spaceWithoutV} = space.toObject();
+      return spaceWithoutV;
+    });
+
+    // Modify the request object or response object based on your filtering criteria
+    request.filteredSpaces = filteredSpaces;
+
+    next(); // Move to the next middleware or route handler
+  } catch (error) {
+    // Handle errors appropriately
+    console.error(error);
+    response.status(500).send('Internal Server Error');
+  }
+};
+
 const filterRoomsMiddleware = async (request, response, next) => {
   try {
     const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
@@ -78,9 +101,8 @@ const filterRoomsMiddleware = async (request, response, next) => {
       space_id: {$in: spaceIds},
     });
 
-    next(); 
+    next();
   } catch (error) {
-
     console.error(error);
     response.status(500).send('Internal Server Error');
   }
@@ -107,6 +129,7 @@ const filterBookingsMiddleware = async (req, res, next) => {
 
 module.exports = {
   filterUsersMiddleware,
+  filterSpacesMiddleware,
   filterRoomsMiddleware,
   filterBookingsMiddleware,
 };

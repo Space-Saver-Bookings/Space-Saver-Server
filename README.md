@@ -982,9 +982,7 @@ Retrieve bookings per room within the specified time range.
 
 ### Endpoint
 
-`GET /bookings
-
-/available-time-slots`
+`GET /bookings/available-time-slots`
 
 ### Authorization
 

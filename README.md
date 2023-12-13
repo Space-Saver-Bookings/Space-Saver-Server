@@ -46,6 +46,10 @@ Welcome to the Space Saver Application Server! This server is the backend compon
 
 `POST /register`
 
+### Authorization
+
+Header: `jwt: jwt_token`
+
 ### Description
 
 Create a new user with provided details. The following fields are required in the request body:
@@ -137,9 +141,13 @@ Extend the validity of a user's JSON Web Token (JWT) by providing the existing t
 
 `PUT /users/:userID`
 
+### Authorization
+
+Header: `jwt: jwt_token`
+
 ### Description
 
-Update user information for the specified user ID. Only the user or an admin can update a user's details.
+Update user information for the specified user ID. Only the user can update a user's details.
 
 ### Request
 
@@ -175,9 +183,13 @@ Update user information for the specified user ID. Only the user or an admin can
 
 `DELETE /users/:userID`
 
+### Authorization
+
+Header: `jwt: jwt_token`
+
 ### Description
 
-Delete a user by their user ID. This operation can only be performed by the user or an admin.
+Delete a user by their user ID. This operation can only be performed by the user.
 
 ### Response
 
@@ -192,6 +204,10 @@ Delete a user by their user ID. This operation can only be performed by the user
 ### Endpoint
 
 `GET /users`
+
+### Authorization
+
+Header: `jwt: jwt_token`
 
 ### Description
 
@@ -240,6 +256,10 @@ Retrieve a list of all users registered in the system.
 
 `GET /users/:userID`
 
+### Authorization
+
+Header: `jwt: jwt_token`
+
 ### Description
 
 Retrieve information about a specific user using their user ID.
@@ -265,6 +285,10 @@ Retrieve information about a specific user using their user ID.
 ### Endpoint
 
 `GET /spaces`
+
+### Authorization
+
+Header: `jwt: jwt_token`
 
 ### Description
 
@@ -313,6 +337,10 @@ Retrieve a list of all spaces available in the system.
 
 `GET /spaces/:spaceID`
 
+### Authorization
+
+Header: `jwt: jwt_token`
+
 ### Description
 
 Retrieve information about a specific space using its space ID.
@@ -336,6 +364,10 @@ Retrieve information about a specific space using its space ID.
 ### Endpoint
 
 `POST /spaces`
+
+### Authorization
+
+Header: `jwt: jwt_token`
 
 ### Description
 
@@ -374,6 +406,10 @@ Create a new space with the provided details. The requesting user is automatical
 
 `POST /spaces/code/:invite_code`
 
+### Authorization
+
+Header: `jwt: jwt_token`
+
 ### Description
 
 Add the requesting user to a space using the invite code.
@@ -400,6 +436,10 @@ Add the requesting user to a space using the invite code.
 ### Endpoint
 
 `PUT /spaces/:spaceID`
+
+### Authorization
+
+Header: `jwt: jwt_token`
 
 ### Description
 
@@ -437,6 +477,10 @@ Update space information for the specified space ID. Only the admin of the space
 
 `DELETE /spaces/:spaceID`
 
+### Authorization
+
+Header: `jwt: jwt_token`
+
 ### Description
 
 Delete a space by its space ID. This operation can only be performed by the admin of the space.
@@ -456,6 +500,10 @@ Delete a space by its space ID. This operation can only be performed by the admi
 ### Endpoint
 
 `GET /rooms`
+
+### Authorization
+
+Header: `jwt: jwt_token`
 
 ### Description
 
@@ -522,6 +570,10 @@ Retrieve a list of all rooms available in the system.
 
 `GET /rooms/:roomID`
 
+### Authorization
+
+Header: `jwt: jwt_token`
+
 ### Description
 
 Retrieve information about a specific room using its room ID.
@@ -551,6 +603,10 @@ Retrieve information about a specific room using its room ID.
 ### Endpoint
 
 `POST /rooms`
+
+### Authorization
+
+Header: `jwt: jwt_token`
 
 ### Description
 
@@ -595,6 +651,10 @@ Create a new room with the provided details. The requesting user must be an admi
 
 `PUT /rooms/:roomID`
 
+### Authorization
+
+Header: `jwt: jwt_token`
+
 ### Description
 
 Update room information for the specified room ID. Only the administrator of the room can perform this operation.
@@ -636,6 +696,10 @@ Update room information for the specified room ID. Only the administrator of the
 
 `DELETE /rooms/:roomID`
 
+### Authorization
+
+Header: `jwt: jwt_token`
+
 ### Description
 
 Delete a room by its room ID. This operation can only be performed by the administrator of the room.
@@ -670,6 +734,10 @@ Delete a room by its room ID. This operation can only be performed by the admini
 ### Endpoint
 
 `GET /bookings`
+
+### Authorization
+
+Header: `jwt: jwt_token`
 
 ### Description
 
@@ -726,6 +794,10 @@ Retrieve a list of all bookings in the system.
 
 `GET /bookings/:bookingID`
 
+### Authorization
+
+Header: `jwt: jwt_token`
+
 ### Description
 
 Retrieve information about a specific booking using its booking ID.
@@ -750,6 +822,10 @@ Retrieve information about a specific booking using its booking ID.
 ### Endpoint
 
 `POST /bookings`
+
+### Authorization
+
+Header: `jwt: jwt_token`
 
 ### Description
 
@@ -792,6 +868,10 @@ Create a new booking with the provided details. The requesting user must have th
 
 `PUT /bookings/:bookingID`
 
+### Authorization
+
+Header: `jwt: jwt_token`
+
 ### Description
 
 Update booking information for the specified booking ID. Only the user with the necessary permissions can perform this operation.
@@ -831,6 +911,10 @@ Update booking information for the specified booking ID. Only the user with the 
 
 `DELETE /bookings/:bookingID`
 
+### Authorization
+
+Header: `jwt: jwt_token`
+
 ### Description
 
 Delete a booking by its booking ID. This operation can only be performed by the user with the necessary permissions.
@@ -858,6 +942,10 @@ Delete a booking by its booking ID. This operation can only be performed by the 
 ### Endpoint
 
 `GET /bookings/room`
+
+### Authorization
+
+Header: `jwt: jwt_token`
 
 ### Description
 
@@ -897,6 +985,10 @@ Retrieve bookings per room within the specified time range.
 `GET /bookings
 
 /available-time-slots`
+
+### Authorization
+
+Header: `jwt: jwt_token`
 
 ### Description
 

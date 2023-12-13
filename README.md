@@ -4,7 +4,7 @@
 Welcome to the Space Saver Application Server! This server is the backend component of the MERN (MongoDB, Express.js, React, Node.js) stack application designed to streamline space management within organizations. Whether you're looking to coordinate meeting spaces, manage rooms, or facilitate bookings, this server provides a robust API for seamless integration.
 
 # Table of Contents
-- [User Operations API Documentation](#user-operations-api-documentation)
+- [User Operations](#user-operations)
   - [Create a User](#create-a-user)
   - [Sign In](#sign-in)
   - [Refresh JWT](#refresh-jwt)
@@ -13,7 +13,7 @@ Welcome to the Space Saver Application Server! This server is the backend compon
   - [List All Users](#list-all-users)
   - [Show Specific User](#show-specific-user)
 
-- [Space Operations API Documentation](#space-operations-api-documentation)
+- [Space Operations](#space-operations)
   - [List All Spaces](#list-all-spaces)
   - [Show Specific Space](#show-specific-space)
   - [Create a New Space](#create-a-new-space)
@@ -21,21 +21,24 @@ Welcome to the Space Saver Application Server! This server is the backend compon
   - [Update Space](#update-space)
   - [Delete Space](#delete-space)
 
-- [Room Operations API Documentation](#room-operations-api-documentation)
+- [Room Operations](#room-operations)
   - [List All Rooms](#list-all-rooms)
   - [Show Specific Room](#show-specific-room)
   - [Create a New Room](#create-a-new-room)
   - [Update Room](#update-room)
   - [Delete Room](#delete-room)
 
-- [Booking Operations API Documentation](#booking-operations-api-documentation)
+- [Booking Operations](#booking-operations)
   - [List All Bookings](#list-all-bookings)
   - [Show Specific Booking](#show-specific-booking)
   - [Create a New Booking](#create-a-new-booking)
   - [Update Booking](#update-booking)
   - [Delete Booking](#delete-booking)
+  - [List Bookings by Room and Time Range](#list-bookings-by-room-and-time-range)
+  - [Retrieve Available Time Slots for a Room](#retrieve-available-time-slots-for-a-room)
 
-# User Operations API Documentation
+
+# User Operations
 
 ## Create a User
 
@@ -255,7 +258,7 @@ Retrieve information about a specific user using their user ID.
 }
 ```
 
-# Space Operations API Documentation
+# Space Operations
 
 ## List All Spaces
 
@@ -446,7 +449,7 @@ Delete a space by its space ID. This operation can only be performed by the admi
 }
 ```
 
-# Room Operations API Documentation
+# Room Operations
 
 ## List All Rooms
 
@@ -660,7 +663,7 @@ Delete a room by its room ID. This operation can only be performed by the admini
 }
 ```
 
-# Booking Operations API Documentation
+# Booking Operations
 
 ## List All Bookings
 
@@ -671,6 +674,11 @@ Delete a room by its room ID. This operation can only be performed by the admini
 ### Description
 
 Retrieve a list of all bookings in the system.
+
+#### Query Parameters
+
+- `start_time` (optional): Filter bookings with start time after or equal to the specified time.
+- `end_time` (optional): Filter bookings with end time before or equal to the specified time.
 
 ### Response
 
@@ -845,5 +853,79 @@ Delete a booking by its booking ID. This operation can only be performed by the 
 }
 ```
 
+## List Bookings by Room and Time Range
 
+### Endpoint
 
+`GET /bookings/room`
+
+### Description
+
+Retrieve bookings per room within the specified time range.
+
+#### Query Parameters
+
+- `start_time` (optional): Filter bookings with start time after or equal to the specified time.
+- `end_time` (optional): Filter bookings with end time before or equal to the specified time.
+
+### Response
+
+```json
+{
+  "bookingsPerRoom": [
+    {
+      "room_id": "room_id1",
+      "bookings": [
+        {"start_time": "2023-12-15T10:00:00Z", "end_time": "2023-12-15T11:30:00Z"},
+        {"start_time": "2023-12-16T14:00:00Z", "end_time": "2023-12-16T16:00:00Z"}
+      ]
+    },
+    {
+      "room_id": "room_id2",
+      "bookings": [
+        {"start_time": "2023-12-17T09:30:00Z", "end_time": "2023-12-17T12:00:00Z"}
+      ]
+    }
+  ]
+}
+```
+
+## Retrieve Available Time Slots for a Room
+
+### Endpoint
+
+`GET /bookings
+
+/available-time-slots`
+
+### Description
+
+Retrieve available time slots for a room within the specified time range.
+
+#### Query Parameters
+
+- `start_time` (optional): Start time to begin checking available time slots.
+- `end_time` (optional): End time to stop checking available time slots.
+- `interval` (optional): Time interval in minutes for available time slots. Default is 30 minutes.
+
+### Response
+
+```json
+{
+  "availableTimeSlots": [
+    {
+      "room_id": "room_id1",
+      "time_slots": [
+        {"start_time": "2023-12-15T11:30:00Z", "end_time": "2023-12-16T14:00:00Z"},
+        {"start_time": "2023-12-16T16:00:00Z", "end_time": "2023-12-17T09:30:00Z"}
+      ]
+    },
+    {
+      "room_id": "room_id2",
+      "time_slots": [
+        {"start_time": "2023-12-17T12:00:00Z", "end_time": "2023-12-18T00:00:00Z"}
+      ]
+    }
+  ]
+}
+```

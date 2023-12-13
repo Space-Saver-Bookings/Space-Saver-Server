@@ -16,6 +16,7 @@ const {
   filterUndefinedProperties,
   validateRoomBelongsToUser,
   validateUserPermission,
+  generateTimeSlots,
 } = require('../functions/bookingFunctions');
 const {getUserIdFromJwt} = require('../functions/userFunctions');
 const {filterBookingsMiddleware} = require('../middleware/filterMiddleware');
@@ -40,6 +41,110 @@ router.get(
   }
 );
 
+// Retrieve all per-room from bookings associated with user's rooms
+router.get(
+  '/room',
+  verifyJwtHeader,
+  filterBookingsMiddleware,
+  async (request, response, next) => {
+    try {
+      const { filteredBookings } = request;
+      const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+
+      // Extract query parameters
+      const startTime = request.query.start_time || new Date();
+      const endTime = request.query.end_time || null;
+
+      // Extract availability information for each room within the specified time range
+      const bookingsPerRoom = {};
+
+      filteredBookings.forEach((booking) => {
+        const roomID = booking.room_id._id;
+
+        // Validate that the room belongs to the user
+        const isRoomValid = validateRoomBelongsToUser(roomID, requestingUserID);
+        if (isRoomValid) {
+          // Check if the booking falls within the specified time range
+          if (
+            (!startTime || new Date(booking.end_time) >= new Date(startTime)) &&
+            (!endTime || new Date(booking.start_time) <= new Date(endTime))
+          ) {
+            if (!bookingsPerRoom[roomID]) {
+              bookingsPerRoom[roomID] = [];
+            }
+
+            bookingsPerRoom[roomID].push({
+              start_time: booking.start_time,
+              end_time: booking.end_time,
+            });
+          }
+        }
+      });
+
+      // Convert result to the desired format
+      const formattedResult = Object.keys(bookingsPerRoom).map((roomID) => ({
+        room_id: roomID,
+        bookings: bookingsPerRoom[roomID],
+      }));
+
+      response.json({ bookingsPerRoom: formattedResult });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Retrieve available time slots for a room
+router.get('/available-time-slots', verifyJwtHeader, filterBookingsMiddleware, async (request, response, next) => {
+  try {
+    const { filteredBookings } = request;
+    const requestingUserID = await getUserIdFromJwt(request.headers.jwt); // Assuming you have a user ID in the JWT payload
+
+    // Extract query parameters
+    const startTime = new Date(request.query.start_time || new Date());
+    const endDateDefault = new Date();
+    endDateDefault.setDate(endDateDefault.getDate() + 1);
+    const endTime = new Date(request.query.end_time || endDateDefault);
+    const interval = parseInt(request.query.interval || 30, 10); // Default to 30 minutes if not provided
+
+    // Generate all time slots within the specified range and interval
+    const allTimeSlots = generateTimeSlots(startTime, endTime, interval);
+
+    // Extract booked time slots
+    const bookedTimeSlots = {};
+    filteredBookings.forEach((booking) => {
+      const roomID = booking.room_id._id;
+
+      // Validate that the room belongs to the user
+      const isRoomValid = validateRoomBelongsToUser(roomID, requestingUserID);
+      if (isRoomValid) {
+        if (!bookedTimeSlots[roomID]) {
+          bookedTimeSlots[roomID] = [];
+        }
+
+        bookedTimeSlots[roomID].push({ start_time: new Date(booking.start_time), end_time: new Date(booking.end_time) });
+      }
+    });
+
+    // Calculate available time slots by subtracting booked time slots from all time slots
+    const availableTimeSlots = {};
+    Object.keys(bookedTimeSlots).forEach((roomID) => {
+      availableTimeSlots[roomID] = allTimeSlots.filter(
+        (slot) => !bookedTimeSlots[roomID].some((booking) => slot.available_start_time < booking.end_time && slot.available_end_time > booking.start_time)
+      );
+    });
+
+    // Return the available time slots with room ID in the response
+    const formattedResponse = Object.keys(availableTimeSlots).map((roomID) => ({
+      room_id: roomID,
+      time_slots: availableTimeSlots[roomID],
+    }));
+
+    response.json({ availableTimeSlots: formattedResponse });
+  } catch (error) {
+    next(error);
+  }
+});
 router.get(
   '/:bookingID',
   verifyJwtHeader,

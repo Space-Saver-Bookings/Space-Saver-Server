@@ -2,6 +2,12 @@ const {Space} = require('../models/SpaceModel');
 // --------------------------------------
 // ----- MongoDB/MongooseJS functionality
 
+/**
+ * Returns an array of raw MongoDB database documents containing spaces associated with the requesting user.
+ *
+ * @param {string} requestingUserID - The ID of the user making the request.
+ * @returns {Array} An array of raw MongoDB database documents representing spaces.
+ */
 async function getAllSpaces(requestingUserID) {
   let spaces = await Space.find({
     $or: [{user_ids: requestingUserID}, {admin_id: requestingUserID}],
@@ -10,11 +16,22 @@ async function getAllSpaces(requestingUserID) {
   return spaces;
 }
 
-// Returns an array of raw MongoDB database documents.
+/**
+ * Returns an array of raw MongoDB database documents containing spaces associated with the requesting user.
+ *
+ * @param {string} requestingUserID - The ID of the user making the request.
+ * @returns {Array} An array of raw MongoDB database documents representing spaces.
+ */
 async function getOneSpace(spaceID) {
   return await Space.findOne({_id: spaceID});
 }
 
+/**
+ * Creates a new space based on spaceDetails data and saves it to the database.
+ *
+ * @param {Object} spaceDetails - Details of the new space.
+ * @returns {Object} The raw MongoDB database document representing the created space.
+ */
 async function createSpace(spaceDetails) {
   let newSpace = new Space({
     admin_id: spaceDetails.admin_id,
@@ -28,6 +45,13 @@ async function createSpace(spaceDetails) {
   return await newSpace.save();
 }
 
+/**
+ * Updates an existing space and returns the updated space data.
+ *
+ * @param {Object} spaceDetails - Details for updating the space.
+ * @param {string} requestingUserID - The ID of the user making the request.
+ * @returns {Object|null} The raw MongoDB database document representing the updated space or null if not found or permission denied.
+ */
 async function updateSpace(spaceDetails, requestingUserID) {
   // Find space, update it, return the updated space data.
   const space = await Space.findOne({_id: spaceDetails.spaceID});
@@ -48,7 +72,13 @@ async function updateSpace(spaceDetails, requestingUserID) {
   ).exec();
 }
 
-
+/**
+ * Deletes an existing space.
+ *
+ * @param {string} spaceID - The ID of the space to delete.
+ * @param {string} requestingUserID - The ID of the user making the request.
+ * @returns {Object|null} The raw MongoDB database document representing the deleted space or null if not found or permission denied.
+ */
 async function deleteSpace(spaceID, requestingUserID) {
   const space = await Space.findOne({_id: spaceID});
 
@@ -65,13 +95,23 @@ async function deleteSpace(spaceID, requestingUserID) {
   return await Space.findByIdAndDelete(spaceID).exec();
 }
 
-
+/**
+ * Removes undefined properties from an object.
+ *
+ * @param {Object} obj - The object to filter.
+ * @returns {Object} A new object with undefined properties removed.
+ */
 function filterUndefinedProperties(obj) {
   return Object.fromEntries(
     Object.entries(obj).filter(([_, v]) => v !== undefined)
   );
 }
 
+/**
+ * Generates a unique access code for a space.
+ *
+ * @returns {string} A unique access code.
+ */
 async function generateAccessCode() {
   const characters =
     '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';

@@ -30,7 +30,7 @@ beforeEach(async () => {
   const delayDuration = 2000; // implement timeout
   await new Promise((resolve) => setTimeout(resolve, delayDuration));
   // Delete user before each test
-  const emailsToDelete = ['ada.lovelace@example.com'];
+  const emailsToDelete = ['test.user5@test4.com'];
   for (const email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
@@ -43,7 +43,7 @@ describe('Booking Router', () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Ada',
         last_name: 'Lovelace',
-        email: 'ada.lovelace@example.com',
+        email: 'test.user5@test4.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -52,7 +52,7 @@ describe('Booking Router', () => {
 
       // Log in the user and get the JWT
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'ada.lovelace@example.com',
+        email: 'test.user5@test4.com',
         password: 'password123',
       });
 
@@ -73,7 +73,7 @@ describe('Booking Router', () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Ada',
         last_name: 'Lovelace',
-        email: 'ada.lovelace@example.com',
+        email: 'test.user5@test4.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -113,7 +113,7 @@ describe('Booking Router', () => {
 
       // Log in the user and get the JWT
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'ada.lovelace@example.com',
+        email: 'test.user5@test4.com',
         password: 'password123',
       });
 
@@ -135,7 +135,7 @@ describe('Booking Router', () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Ada',
         last_name: 'Lovelace',
-        email: 'ada.lovelace@example.com',
+        email: 'test.user5@test4.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -163,7 +163,7 @@ describe('Booking Router', () => {
       const createdRoom = await createRoom(roomDetails);
 
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'ada.lovelace@example.com',
+        email: 'test.user5@test4.com',
         password: 'password123',
       });
 
@@ -193,7 +193,7 @@ describe('Booking Router', () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Ada',
         last_name: 'Lovelace',
-        email: 'ada.lovelace@example.com',
+        email: 'test.user5@test4.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -233,7 +233,7 @@ describe('Booking Router', () => {
 
       // Log in the user and get the JWT
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'ada.lovelace@example.com',
+        email: 'test.user5@test4.com',
         password: 'password123',
       });
 
@@ -259,7 +259,7 @@ describe('Booking Router', () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Ada',
         last_name: 'Lovelace',
-        email: 'ada.lovelace@example.com',
+        email: 'test.user5@test4.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -299,7 +299,7 @@ describe('Booking Router', () => {
 
       // Log in the user and get the JWT
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'ada.lovelace@example.com',
+        email: 'test.user5@test4.com',
         password: 'password123',
       });
 

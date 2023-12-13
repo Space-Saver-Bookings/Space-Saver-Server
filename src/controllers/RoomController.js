@@ -69,7 +69,7 @@ router.get(
 // Create a new room
 router.post('/', verifyJwtHeader, async (request, response, next) => {
   if (!(await isRequestingUserAdmin(request))) {
-    response.status(403).json({
+    return response.status(403).json({
       error: `Unauthorised. User is not administrator for space: ${request.body.space_id}`,
     });
   }

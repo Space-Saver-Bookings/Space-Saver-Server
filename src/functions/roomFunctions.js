@@ -66,7 +66,7 @@ async function isRequestingUserAdmin(request) {
     if (
       existingSpace &&
       existingSpace._id.toString() === spaceID &&
-      existingSpace.admin_id.toString() === requestingUserID
+      existingSpace.admin_id._id.toString() === requestingUserID
     ) {
       return true;
     } else {

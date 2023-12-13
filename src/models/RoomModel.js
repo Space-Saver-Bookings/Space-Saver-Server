@@ -20,10 +20,15 @@ const RoomSchema = new mongoose.Schema({
   },
 });
 
+RoomSchema.pre(/^find/, function (next) {
+  this.populate('space_id');
+  next();
+});
+
 RoomSchema.set('toJSON', {
   transform: (doc, ret) => {
     // Move the _id field to the beginning of the object
-    ret = { _id: ret._id, ...ret };
+    ret = {_id: ret._id, ...ret};
     delete ret.__v;
     return ret;
   },

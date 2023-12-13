@@ -29,7 +29,7 @@ beforeEach(async () => {
   const delayDuration = 2000; // implement timeout
   await new Promise((resolve) => setTimeout(resolve, delayDuration));
   // Delete user before each test
-  const emailsToDelete = ['john.bobson@example.com'];
+  const emailsToDelete = ['test.user4@test3.com'];
   for (email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
@@ -42,7 +42,7 @@ describe('Room Router', () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'John',
         last_name: 'Bobson',
-        email: 'john.bobson@example.com',
+        email: 'test.user4@test3.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -51,7 +51,7 @@ describe('Room Router', () => {
 
       // Log in the user and get the JWT
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'john.bobson@example.com',
+        email: 'test.user4@test3.com',
         password: 'password123',
       });
 
@@ -72,7 +72,7 @@ describe('Room Router', () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'John',
         last_name: 'Bobson',
-        email: 'john.bobson@example.com',
+        email: 'test.user4@test3.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -100,7 +100,7 @@ describe('Room Router', () => {
       const createdRoom = await createRoom(roomDetails);
       // Log in the user and get the JWT
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'john.bobson@example.com',
+        email: 'test.user4@test3.com',
         password: 'password123',
       });
 
@@ -122,26 +122,26 @@ describe('Room Router', () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'John',
         last_name: 'Bobson',
-        email: 'john.bobson@example.com',
+        email: 'test.user4@test3.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
         position: 'Developer',
       });
-
+      const code = await generateAccessCode();
       const spaceDetails = {
         admin_id: registerResponse.body.user._id,
         user_ids: [],
         name: 'Test Space',
         description: 'Test space description',
         capacity: 10,
-        invite_code: await generateAccessCode(), // Ensure you have the invite_code variable defined
+        invite_code: code, 
       };
 
       const createdSpace = await createSpace(spaceDetails);
 
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'john.bobson@example.com',
+        email: 'test.user4@test3.com',
         password: 'password123',
       });
 
@@ -160,7 +160,6 @@ describe('Room Router', () => {
         .set('jwt', jwt)
         .send(roomDetails);
 
-      // Assertions
       expect(response.status).toBe(201);
     });
   });
@@ -170,7 +169,7 @@ describe('Room Router', () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'John',
         last_name: 'Bobson',
-        email: 'john.bobson@example.com',
+        email: 'test.user4@test3.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -198,7 +197,7 @@ describe('Room Router', () => {
       const createdRoom = await createRoom(roomDetails);
       // Log in the user and get the JWT
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'john.bobson@example.com',
+        email: 'test.user4@test3.com',
         password: 'password123',
       });
 
@@ -225,7 +224,7 @@ describe('Room Router', () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'John',
         last_name: 'Bobson',
-        email: 'john.bobson@example.com',
+        email: 'test.user4@test3.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -253,7 +252,7 @@ describe('Room Router', () => {
       const createdRoom = await createRoom(roomDetails);
       // Log in the user and get the JWT
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'john.bobson@example.com',
+        email: 'test.user4@test3.com',
         password: 'password123',
       });
 

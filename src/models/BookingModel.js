@@ -36,6 +36,11 @@ const BookingSchema = new mongoose.Schema({
   },
 });
 
+BookingSchema.pre(/^find/, function (next) {
+  this.populate('room_id primary_user_id invited_user_ids');
+  next();
+});
+
 BookingSchema.set('toJSON', {
   transform: (doc, ret) => {
     // Move the _id field to the beginning of the object

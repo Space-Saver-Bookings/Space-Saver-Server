@@ -16,7 +16,6 @@ async function getOneSpace(spaceID) {
 }
 
 async function createSpace(spaceDetails) {
-  // Create new space based on spaceDetails data
   let newSpace = new Space({
     admin_id: spaceDetails.admin_id,
     user_ids: spaceDetails.user_ids,
@@ -26,7 +25,6 @@ async function createSpace(spaceDetails) {
     capacity: spaceDetails.capacity,
   });
 
-  // And save it to DB
   return await newSpace.save();
 }
 

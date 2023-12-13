@@ -30,6 +30,11 @@ const SpaceSchema = new mongoose.Schema({
   },
 });
 
+SpaceSchema.pre(/^find/, function (next) {
+  this.populate('admin_id').populate('user_ids');
+  next();
+});
+
 SpaceSchema.set('toJSON', {
   transform: (doc, ret) => {
     // Move the _id field to the beginning of the object

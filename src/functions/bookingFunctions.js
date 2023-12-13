@@ -65,7 +65,7 @@ async function validateRoomBelongsToUser(roomID, requestingUserID) {
 
 const validateUserPermission = (booking, requestingUserID) => {
   if (
-    requestingUserID !== booking.primary_user_id.toString() &&
+    requestingUserID !== booking.primary_user_id._id.toString() &&
     !booking.invited_user_ids
       .map((id) => id.toString())
       .includes(requestingUserID)

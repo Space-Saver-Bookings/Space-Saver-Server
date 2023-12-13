@@ -93,6 +93,42 @@ router.post('/', verifyJwtHeader, async (request, response, next) => {
   }
 });
 
+// Add user to space
+router.post(
+  '/code/:invite_code',
+  verifyJwtHeader,
+  async (request, response, next) => {
+    try {
+      const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+      const inviteCode = request.params.invite_code;
+
+      // Find the space with the given invite code
+      const space = await Space.findOne({invite_code: inviteCode});
+
+      if (!space) {
+        return response
+          .status(404)
+          .json({message: 'Space not found with the given invite code'});
+      }
+
+      // Check if the user is already in the space
+      if (space.user_ids.includes(requestingUserID)) {
+        return response
+          .status(400)
+          .json({message: 'User is already part of the space', space: space});
+      }
+
+      // Add the user to the space
+      space.user_ids.push(requestingUserID);
+      await space.save();
+
+      response.status(200).json({message: 'User joined space successfully', space: space});
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 router.put('/:spaceID', verifyJwtHeader, async (request, response, next) => {
   try {
     const {admin_id, user_ids, name, description, capacity} = request.body;

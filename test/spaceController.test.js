@@ -1,7 +1,11 @@
 const request = require('supertest');
 const {app} = require('../src/server');
 
-const {getDatabaseURL, databaseConnector, databaseDisconnector} = require('../src/database');
+const {
+  getDatabaseURL,
+  databaseConnector,
+  databaseDisconnector,
+} = require('../src/database');
 const {deleteUserByEmail} = require('../src/functions/userFunctions');
 const {
   createSpace,
@@ -25,7 +29,7 @@ beforeEach(async () => {
   await new Promise((resolve) => setTimeout(resolve, delayDuration));
 
   // Delete user before each test
-  const emailsToDelete = ['bob.johnson@example.com'];
+  const emailsToDelete = ['test.user3@test2.com'];
   for (email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
@@ -38,7 +42,7 @@ describe('Space Router', () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Bob',
         last_name: 'Johnson',
-        email: 'bob.johnson@example.com',
+        email: 'test.user3@test2.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -46,7 +50,7 @@ describe('Space Router', () => {
       });
 
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'bob.johnson@example.com',
+        email: 'test.user3@test2.com',
         password: 'password123',
       });
 
@@ -54,7 +58,6 @@ describe('Space Router', () => {
 
       const invite_code = await generateAccessCode();
 
-      // Create a test space
       const spaceDetails = {
         admin_id: registerResponse.body.user._id,
         user_ids: [],
@@ -81,7 +84,7 @@ describe('Space Router', () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Bob',
         last_name: 'Johnson',
-        email: 'bob.johnson@example.com',
+        email: 'test.user3@test2.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -89,7 +92,7 @@ describe('Space Router', () => {
       });
 
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'bob.johnson@example.com',
+        email: 'test.user3@test2.com',
         password: 'password123',
       });
 
@@ -116,12 +119,12 @@ describe('Space Router', () => {
     });
   });
 
-  describe('POST /spaces', () => {
-    test('should create a new space', async () => {
+  describe('POST /spaces/code/:invite_code', () => {
+    test('should add user to space with the given invite code', async () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Bob',
         last_name: 'Johnson',
-        email: 'bob.johnson@example.com',
+        email: 'test.user3@test2.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -129,7 +132,50 @@ describe('Space Router', () => {
       });
 
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'bob.johnson@example.com',
+        email: 'test.user3@test2.com',
+        password: 'password123',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      const invite_code = await generateAccessCode();
+
+      const spaceDetails = {
+        admin_id: registerResponse.body.user._id,
+        user_ids: [],
+        name: 'Test Space',
+        description: 'Test space description',
+        capacity: 10,
+        invite_code: invite_code,
+      };
+
+      const createdSpace = await createSpace(spaceDetails);
+
+      // Make a request to the endpoint with the JWT in the headers
+      const response = await request(app)
+        .post(`/spaces/code/${invite_code}`)
+        .set('jwt', jwt);
+
+      // Assertions
+      expect(response.status).toBe(200);
+      expect(response.body.message).toBe('User joined space successfully');
+    });
+  });
+
+  describe('POST /spaces', () => {
+    test('should create a new space', async () => {
+      const registerResponse = await request(app).post('/users/register').send({
+        first_name: 'Bob',
+        last_name: 'Johnson',
+        email: 'test.user3@test2.com',
+        password: 'password123',
+        post_code: '54321',
+        country: 'NZ',
+        position: 'Developer',
+      });
+
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'test.user3@test2.com',
         password: 'password123',
       });
 
@@ -156,7 +202,7 @@ describe('Space Router', () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Bob',
         last_name: 'Johnson',
-        email: 'bob.johnson@example.com',
+        email: 'test.user3@test2.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -164,7 +210,7 @@ describe('Space Router', () => {
       });
 
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'bob.johnson@example.com',
+        email: 'test.user3@test2.com',
         password: 'password123',
       });
 
@@ -205,7 +251,7 @@ describe('Space Router', () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Bob',
         last_name: 'Johnson',
-        email: 'bob.johnson@example.com',
+        email: 'test.user3@test2.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -213,7 +259,7 @@ describe('Space Router', () => {
       });
 
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'bob.johnson@example.com',
+        email: 'test.user3@test2.com',
         password: 'password123',
       });
 

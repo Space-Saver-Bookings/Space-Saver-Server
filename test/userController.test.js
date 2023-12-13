@@ -14,7 +14,7 @@ beforeAll(async () => {
   const databaseURL = getDatabaseURL(process.env.NODE_ENV);
   await databaseConnector(databaseURL);
 
-  const emailsToDelete = ['bob.johnson@example.com', 'alice.smith@example.com'];
+  const emailsToDelete = ['test.user@test1.com', 'test.user2@test1.com'];
   for (email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
@@ -36,9 +36,9 @@ describe('User Router', () => {
   describe('POST /users/register', () => {
     it('should register a new user', async () => {
       const response = await request(app).post('/users/register').send({
-        first_name: 'Alice',
+        first_name: 'Test',
         last_name: 'Smith',
-        email: 'alice.smith@example.com',
+        email: 'test.user2@test1.com',
         password: 'securepass',
         post_code: '67890',
         country: 'AUS',
@@ -46,14 +46,14 @@ describe('User Router', () => {
       });
 
       expect(response.status).toBe(200);
-      expect(response.body.user.email).toBe('alice.smith@example.com');
+      expect(response.body.user.email).toBe('test.user2@test1.com');
     });
 
     it('should handle duplicate email', async () => {
       const response = await request(app).post('/users/register').send({
-        first_name: 'Alice',
+        first_name: 'Test',
         last_name: 'Smith',
-        email: 'alice.smith@example.com',
+        email: 'test.user2@test1.com',
         password: 'securepass',
         post_code: '67890',
         country: 'AUS',
@@ -67,7 +67,7 @@ describe('User Router', () => {
   describe('POST /users/login', () => {
     it('should login an existing user', async () => {
       const response = await request(app).post('/users/login').send({
-        email: 'alice.smith@example.com',
+        email: 'test.user2@test1.com',
         password: 'securepass',
       });
 
@@ -90,7 +90,7 @@ describe('User Router', () => {
     it("should extend a user's JWT validity", async () => {
       // Login the user to get the initial JWT
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'alice.smith@example.com',
+        email: 'test.user2@test1.com',
         password: 'securepass',
       });
 
@@ -118,7 +118,7 @@ describe('User Router', () => {
   describe('GET /users', () => {
     it('should return a list of users', async () => {
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'alice.smith@example.com',
+        email: 'test.user2@test1.com',
         password: 'securepass',
       });
 
@@ -136,14 +136,14 @@ describe('User Router', () => {
   describe('GET /users/:userID', () => {
     it('should return a specific user', async () => {
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'alice.smith@example.com',
+        email: 'test.user2@test1.com',
         password: 'securepass',
       });
 
       const jwt = await loginResponse.body.jwt;
 
       // Get the ID of the registered user
-      const user = await User.findOne({email: 'alice.smith@example.com'});
+      const user = await User.findOne({email: 'test.user2@test1.com'});
       const userID = user._id.toString();
 
       // Make a request to the endpoint with the JWT in the headers
@@ -152,12 +152,12 @@ describe('User Router', () => {
         .set('jwt', jwt);
 
       expect(response.status).toBe(200);
-      expect(response.body.email).toBe('alice.smith@example.com');
+      expect(response.body.email).toBe('test.user2@test1.com');
     });
 
     it('should handle non-existent user', async () => {
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'alice.smith@example.com',
+        email: 'test.user2@test1.com',
         password: 'securepass',
       });
 
@@ -176,14 +176,14 @@ describe('User Router', () => {
   describe('PUT /users/:userID', () => {
     it('should update a user', async () => {
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'alice.smith@example.com',
+        email: 'test.user2@test1.com',
         password: 'securepass',
       });
 
       const jwt = await loginResponse.body.jwt;
 
       // Get the ID of the registered user
-      const user = await User.findOne({email: 'alice.smith@example.com'});
+      const user = await User.findOne({email: 'test.user2@test1.com'});
       const userID = user._id.toString();
 
       // Make a request to the endpoint with the JWT in the headers
@@ -191,18 +191,18 @@ describe('User Router', () => {
         .put(`/users/${userID}`)
         .set('jwt', jwt)
         .send({
-          first_name: 'UpdatedAlice',
+          first_name: 'UpdatedTest',
           last_name: 'UpdatedSmith',
         });
 
       expect(response.status).toBe(200);
-      expect(response.body.first_name).toBe('UpdatedAlice');
+      expect(response.body.first_name).toBe('UpdatedTest');
       expect(response.body.last_name).toBe('UpdatedSmith');
     });
 
     it('should handle non-existent user for update', async () => {
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'alice.smith@example.com',
+        email: 'test.user2@test1.com',
         password: 'securepass',
       });
 
@@ -213,7 +213,7 @@ describe('User Router', () => {
         .put('/users/nonexistentUserID')
         .set('jwt', jwt)
         .send({
-          first_name: 'UpdatedJohn',
+          first_name: 'UpdatedTest',
           last_name: 'UpdatedDoe',
         });
 
@@ -224,7 +224,7 @@ describe('User Router', () => {
   describe('DELETE /users/:userID', () => {
     it('should handle non-existent user for deletion', async () => {
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'alice.smith@example.com',
+        email: 'test.user2@test1.com',
         password: 'securepass',
       });
 
@@ -242,8 +242,8 @@ describe('User Router', () => {
       // Register another user
       await request(app).post('/users/register').send({
         first_name: 'Bob',
-        last_name: 'Johnson',
-        email: 'bob.johnson@example.com',
+        last_name: 'Testson',
+        email: 'test.user@test1.com',
         password: 'password123',
         post_code: '54321',
         country: 'NZ',
@@ -251,14 +251,14 @@ describe('User Router', () => {
       });
 
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'alice.smith@example.com',
+        email: 'test.user2@test1.com',
         password: 'securepass',
       });
 
       const jwt = await loginResponse.body.jwt;
 
       // Get the ID of the other registered user
-      const otherUser = await User.findOne({email: 'bob.johnson@example.com'});
+      const otherUser = await User.findOne({email: 'test.user@test1.com'});
       const otherUserID = otherUser._id.toString();
 
       // Make a request to the endpoint with the JWT in the headers
@@ -270,14 +270,14 @@ describe('User Router', () => {
     });
     it('should delete a user', async () => {
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'alice.smith@example.com',
+        email: 'test.user2@test1.com',
         password: 'securepass',
       });
 
       const jwt = await loginResponse.body.jwt;
 
       // Get the ID of the registered user
-      const user = await User.findOne({email: 'alice.smith@example.com'});
+      const user = await User.findOne({email: 'test.user2@test1.com'});
       const userID = user._id.toString();
 
       // Make a request to the endpoint with the JWT in the headers
@@ -290,14 +290,14 @@ describe('User Router', () => {
     });
     it('should delete a user', async () => {
       const loginResponse = await request(app).post('/users/login').send({
-        email: 'bob.johnson@example.com',
+        email: 'test.user@test1.com',
         password: 'password123',
       });
 
       const jwt = await loginResponse.body.jwt;
 
       // Get the ID of the registered user
-      const user = await User.findOne({email: 'bob.johnson@example.com'});
+      const user = await User.findOne({email: 'test.user@test1.com'});
       const userID = user._id.toString();
 
       // Make a request to the endpoint with the JWT in the headers

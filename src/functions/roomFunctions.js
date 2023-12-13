@@ -5,18 +5,34 @@ const {getUserIdFromJwt} = require('./userFunctions');
 // --------------------------------------
 // ----- MongoDB/MongooseJS functionality
 
-// Returns an array of raw MongoDB database documents.
+/**
+ * Returns an array of raw MongoDB database documents containing rooms associated with user's spaces.
+ *
+ * @param {string} requestingUserID - The ID of the user making the request.
+ * @returns {Array} An array of raw MongoDB database documents representing rooms.
+ */
 async function getAllRooms(requestingUserID) {
   const userSpaces = await getAllSpaces(requestingUserID)
   const spaceIds = userSpaces.map(space => space._id)
   return await Room.find({ space_id: { $in: spaceIds } })
 }
 
-// Returns an array of raw MongoDB database documents.
+/**
+ * Returns a single raw MongoDB database document for a specific room.
+ *
+ * @param {string} roomID - The ID of the room to retrieve.
+ * @returns {Object|null} A raw MongoDB database document representing a room or null if not found.
+ */
 async function getOneRoom(roomID) {
   return await Room.findOne({_id: roomID}).populate('space_id');
 }
 
+/**
+ * Creates a new room based on roomDetails data and saves it to the database.
+ *
+ * @param {Object} roomDetails - Details of the new room.
+ * @returns {Object} The raw MongoDB database document representing the created room.
+ */
 async function createRoom(roomDetails) {
   // Create new room based on roomDetails data
   let newRoom = new Room({
@@ -30,6 +46,12 @@ async function createRoom(roomDetails) {
   return await newRoom.save();
 }
 
+/**
+ * Updates an existing room and returns the updated room data.
+ *
+ * @param {Object} roomDetails - Details for updating the room.
+ * @returns {Object|null} The raw MongoDB database document representing the updated room or null if not found.
+ */
 async function updateRoom(roomDetails) {
   // Find room, update it, return the updated room data.
   return await Room.findByIdAndUpdate(
@@ -39,16 +61,34 @@ async function updateRoom(roomDetails) {
   ).exec();
 }
 
+/**
+ * Deletes an existing room.
+ *
+ * @param {string} roomID - The ID of the room to delete.
+ * @returns {Object|null} The raw MongoDB database document representing the deleted room or null if not found.
+ */
 async function deleteRoom(roomID) {
   return await Room.findByIdAndDelete(roomID).exec();
 }
 
+/**
+ * Removes undefined properties from an object.
+ *
+ * @param {Object} obj - The object to filter.
+ * @returns {Object} A new object with undefined properties removed.
+ */
 function filterUndefinedProperties(obj) {
   return Object.fromEntries(
     Object.entries(obj).filter(([_, v]) => v !== undefined)
   );
 }
 
+/**
+ * Checks if the requesting user is an admin of the space associated with the request.
+ *
+ * @param {Object} request - The HTTP request object.
+ * @returns {boolean} True if the requesting user is an admin, false otherwise.
+ */
 async function isRequestingUserAdmin(request) {
   try {
     const requestingUserID = await getUserIdFromJwt(request.headers.jwt);

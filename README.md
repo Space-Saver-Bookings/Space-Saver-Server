@@ -109,7 +109,7 @@ Sign in an existing user by providing their email and password. Returns a JSON W
 ### Request Body
 
 - `email` (required): String -> Email of the user.
-- `title` (required): String -> Password of the user.
+- `password` (required): String -> Password of the user.
 
 ### Example Request
 
@@ -143,7 +143,7 @@ Extend the validity of a user's JSON Web Token (JWT) by providing the existing t
 
 ### Request Body
 
-- `jwt` (required): String -> JWT of user login.
+- `jwt` (required): String -> JWT result of user login.
 
 ### Example Request
 
@@ -180,13 +180,13 @@ Update user information for the specified user ID. This operation can only be pe
 
 ### Request Body
 
-- `first_name` (optional): String -> The first name of the user.
-- `last_name` (optional): String -> The last name of the user.
-- `email` (optional): String -> The email of the user.
+- `first_name` (optional): String -> First name of the user.
+- `last_name` (optional): String -> Last name of the user.
+- `email` (optional): String -> Email of the user.
 - `password` (optional): String -> Password of the user.
 - `post_code` (optional): String -> Post code of the user.
 - `country` (optional): String -> Country of the user.
-- `position` (optional): String -> Position name of the user.
+- `position` (optional): String -> Position name or role description of the user.
 
 ### Example Request
 
@@ -506,7 +506,7 @@ Update space information for the specified space ID. Only the admin of the space
 
 ### Request Body
 
-- `admin_id` (optional): String -> The unique ID of the user.
+- `admin_id` (optional): String -> The unique ID of the to be updated admin.
 - `user_ids` (optional): Array -> Unique IDs of all of the users in the Space.
 - `name` (optional): String -> The name of the Space.
 - `description` (optional): String -> Description of the new Space.

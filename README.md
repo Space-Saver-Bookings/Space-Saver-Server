@@ -1139,7 +1139,14 @@ Retrieve available time slots for a room within the specified time range.
         {"start_time": "2023-12-17T12:00:00Z", "end_time": "2023-12-18T00:00:00Z"}
       ]
     }
-  ]
+  ],
+  "mostUsedRoom": "room_id2",
+  "numberOfRoomsInUse": 1,
+  "numberOfUsersInRooms": {
+      "numberOfPrimaryUsers": 1,
+      "numberOfInvitedUsers": 2,
+      "totalNumberOfUsers": 3
+    }
 }
 ```
 

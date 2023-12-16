@@ -1,10 +1,13 @@
 # Space-Saver-Server
- MERN Space Saver Application Server
+
+MERN Space Saver Application Server
 
 Welcome to the Space Saver Application Server! This server is the backend component of the MERN (MongoDB, Express.js, React, Node.js) stack application designed to streamline space management within organizations. Whether you're looking to coordinate meeting spaces, manage rooms, or facilitate bookings, this server provides a robust API for seamless integration.
 
 # Table of Contents
+
 - [User Operations](#user-operations)
+
   - [Create a User](#create-a-user)
   - [Sign In](#sign-in)
   - [Refresh JWT](#refresh-jwt)
@@ -14,6 +17,7 @@ Welcome to the Space Saver Application Server! This server is the backend compon
   - [Show Specific User](#show-specific-user)
 
 - [Space Operations](#space-operations)
+
   - [List All Spaces](#list-all-spaces)
   - [Show Specific Space](#show-specific-space)
   - [Create a New Space](#create-a-new-space)
@@ -22,6 +26,7 @@ Welcome to the Space Saver Application Server! This server is the backend compon
   - [Delete Space](#delete-space)
 
 - [Room Operations](#room-operations)
+
   - [List All Rooms](#list-all-rooms)
   - [Show Specific Room](#show-specific-room)
   - [Create a New Room](#create-a-new-room)
@@ -36,7 +41,6 @@ Welcome to the Space Saver Application Server! This server is the backend compon
   - [Delete Booking](#delete-booking)
   - [List Bookings by Room and Time Range](#list-bookings-by-room-and-time-range)
   - [Retrieve Available Time Slots for a Room](#retrieve-available-time-slots-for-a-room)
-
 
 # User Operations
 
@@ -113,7 +117,6 @@ Sign in an existing user by providing their email and password. Returns a JSON W
 
 ### Example Request
 
-
 ```json
 {
   "email": "user@example.com",
@@ -146,7 +149,6 @@ Extend the validity of a user's JSON Web Token (JWT) by providing the existing t
 - `jwt` (required): String -> JWT result of user login.
 
 ### Example Request
-
 
 ```json
 {
@@ -189,7 +191,6 @@ Update user information for the specified user ID. This operation can only be pe
 - `position` (optional): String -> Position name or role description of the user.
 
 ### Example Request
-
 
 ```json
 {
@@ -946,7 +947,7 @@ Header: `jwt: jwt_token`
   "invited_user_ids": ["user_id1", "user_id2"],
   "description": "This is Meeting 1",
   "start_time": "2023-01-01T08:00:00.000Z",
-  "end_time": "2023-01-01T09:00:00.000Z",
+  "end_time": "2023-01-01T09:00:00.000Z"
 }
 ```
 
@@ -1085,14 +1086,23 @@ Retrieve bookings per room within the specified time range.
     {
       "room_id": "room_id1",
       "bookings": [
-        {"start_time": "2023-12-15T10:00:00Z", "end_time": "2023-12-15T11:30:00Z"},
-        {"start_time": "2023-12-16T14:00:00Z", "end_time": "2023-12-16T16:00:00Z"}
+        {
+          "start_time": "2023-12-15T10:00:00Z",
+          "end_time": "2023-12-15T11:30:00Z"
+        },
+        {
+          "start_time": "2023-12-16T14:00:00Z",
+          "end_time": "2023-12-16T16:00:00Z"
+        }
       ]
     },
     {
       "room_id": "room_id2",
       "bookings": [
-        {"start_time": "2023-12-17T09:30:00Z", "end_time": "2023-12-17T12:00:00Z"}
+        {
+          "start_time": "2023-12-17T09:30:00Z",
+          "end_time": "2023-12-17T12:00:00Z"
+        }
       ]
     }
   ]
@@ -1129,24 +1139,33 @@ Retrieve available time slots for a room within the specified time range.
     {
       "room_id": "room_id1",
       "time_slots": [
-        {"start_time": "2023-12-15T11:30:00Z", "end_time": "2023-12-16T14:00:00Z"},
-        {"start_time": "2023-12-16T16:00:00Z", "end_time": "2023-12-17T09:30:00Z"}
+        {
+          "available_start_time": "2023-12-17T00:00:05.000Z",
+          "available_end_time": "2023-12-17T01:00:05.000Z"
+        },
+        {
+          "available_start_time": "2023-12-17T01:00:05.000Z",
+          "available_end_time": "2023-12-17T02:00:05.000Z"
+        }
       ]
     },
     {
       "room_id": "room_id2",
       "time_slots": [
-        {"start_time": "2023-12-17T12:00:00Z", "end_time": "2023-12-18T00:00:00Z"}
+        {
+          "available_start_time": "2023-12-17T02:00:05.000Z",
+          "available_end_time": "2023-12-17T03:00:05.000Z"
+        }
       ]
     }
   ],
   "mostUsedRoom": "room_id2",
-  "numberOfRoomsInUse": 1,
+  "numberOfRoomsInUse": 2,
   "numberOfUsersInRooms": {
-      "numberOfPrimaryUsers": 1,
-      "numberOfInvitedUsers": 2,
-      "totalNumberOfUsers": 3
-    }
+    "numberOfPrimaryUsers": 2,
+    "numberOfInvitedUsers": 1,
+    "totalNumberOfUsers": 3
+  }
 }
 ```
 

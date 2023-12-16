@@ -44,7 +44,7 @@ Welcome to the Space Saver Application Server! This server is the backend compon
 
 ### Endpoint
 
-`POST /register`
+`POST /users/register`
 
 ### Authorization
 
@@ -82,11 +82,13 @@ Create a new user with provided details. The following fields are required in th
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 ## Sign In
 
 ### Endpoint
 
-`POST /login`
+`POST /users/login`
 
 ### Description
 
@@ -109,11 +111,13 @@ Sign in an existing user by providing their email and password. Returns a JSON W
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 ## Refresh JWT
 
 ### Endpoint
 
-`POST /token-refresh`
+`POST /users/token-refresh`
 
 ### Description
 
@@ -135,6 +139,8 @@ Extend the validity of a user's JSON Web Token (JWT) by providing the existing t
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 ## Update User
 
 ### Endpoint
@@ -147,7 +153,7 @@ Header: `jwt: jwt_token`
 
 ### Description
 
-Update user information for the specified user ID. Only the user can update a user's details.
+Update user information for the specified user ID. This operation can only be performed by the user.
 
 ### Request
 
@@ -199,6 +205,8 @@ Delete a user by their user ID. This operation can only be performed by the user
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 ## List All Users
 
 ### Endpoint
@@ -211,7 +219,7 @@ Header: `jwt: jwt_token`
 
 ### Description
 
-Retrieve a list of all users registered in the system.
+Retrieve a list of users within the same space(s) as the authenticated user.
 
 ### Response
 
@@ -250,6 +258,8 @@ Retrieve a list of all users registered in the system.
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 ## Show Specific User
 
 ### Endpoint
@@ -277,6 +287,8 @@ Retrieve information about a specific user using their user ID.
   "position": "Developer"
 }
 ```
+
+[Back to contents](#table-of-contents)
 
 # Space Operations
 
@@ -331,6 +343,8 @@ Retrieve a list of all spaces available in the system.
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 ## Show Specific Space
 
 ### Endpoint
@@ -359,6 +373,8 @@ Retrieve information about a specific space using its space ID.
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 ## Create a New Space
 
 ### Endpoint
@@ -379,8 +395,7 @@ Create a new space with the provided details. The requesting user is automatical
 {
   "name": "New Conference Room",
   "description": "State-of-the-art conference room",
-  "capacity": 25,
-  "user_ids": ["user_id1", "user_id2"]
+  "capacity": 25
 }
 ```
 
@@ -399,6 +414,8 @@ Create a new space with the provided details. The requesting user is automatical
   }
 }
 ```
+
+[Back to contents](#table-of-contents)
 
 ## Join Space with Invite Code
 
@@ -430,6 +447,8 @@ Add the requesting user to a space using the invite code.
   }
 }
 ```
+
+[Back to contents](#table-of-contents)
 
 ## Update Space
 
@@ -471,6 +490,8 @@ Update space information for the specified space ID. Only the admin of the space
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 ## Delete Space
 
 ### Endpoint
@@ -493,6 +514,8 @@ Delete a space by its space ID. This operation can only be performed by the admi
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 # Room Operations
 
 ## List All Rooms
@@ -507,7 +530,7 @@ Header: `jwt: jwt_token`
 
 ### Description
 
-Retrieve a list of all rooms available in the system.
+Retrieve a list of rooms within the same space(s) as the authenticated user.
 
 ### Response
 
@@ -523,7 +546,7 @@ Retrieve a list of all rooms available in the system.
         "user_ids": ["user_id1", "user_id2"],
         "name": "Meeting Room A",
         "description": "A cozy meeting room with whiteboard",
-        "invite_code": "abcd1234",
+        "invite_code": "aBcd1",
         "capacity": 10
       },
       "name": "Room 101",
@@ -538,7 +561,7 @@ Retrieve a list of all rooms available in the system.
         "user_ids": ["user_id3", "user_id4"],
         "name": "Office Lounge",
         "description": "Relaxing lounge for informal meetings",
-        "invite_code": "efgh5678",
+        "invite_code": "Ef678",
         "capacity": 15
       },
       "name": "Lounge Room",
@@ -553,7 +576,7 @@ Retrieve a list of all rooms available in the system.
         "user_ids": ["user_id5"],
         "name": "Conference Room B",
         "description": "Large conference room with AV facilities",
-        "invite_code": "ijkl9012",
+        "invite_code": "iJkl9",
         "capacity": 20
       },
       "name": "Conference Room 1",
@@ -563,6 +586,8 @@ Retrieve a list of all rooms available in the system.
   ]
 }
 ```
+
+[Back to contents](#table-of-contents)
 
 ## Show Specific Room
 
@@ -597,6 +622,8 @@ Retrieve information about a specific room using its room ID.
   "capacity": 8
 }
 ```
+
+[Back to contents](#table-of-contents)
 
 ## Create a New Room
 
@@ -645,6 +672,8 @@ Create a new room with the provided details. The requesting user must be an admi
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 ## Update Room
 
 ### Endpoint
@@ -690,6 +719,8 @@ Update room information for the specified room ID. Only the administrator of the
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 ## Delete Room
 
 ### Endpoint
@@ -727,6 +758,8 @@ Delete a room by its room ID. This operation can only be performed by the admini
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 # Booking Operations
 
 ## List All Bookings
@@ -741,7 +774,7 @@ Header: `jwt: jwt_token`
 
 ### Description
 
-Retrieve a list of all bookings in the system.
+Retrieve a list of bookings within the same space(s) as the authenticated user.
 
 #### Query Parameters
 
@@ -788,6 +821,8 @@ Retrieve a list of all bookings in the system.
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 ## Show Specific Booking
 
 ### Endpoint
@@ -816,6 +851,8 @@ Retrieve information about a specific booking using its booking ID.
   "end_time": "2023-12-15T11:30:00Z"
 }
 ```
+
+[Back to contents](#table-of-contents)
 
 ## Create a New Booking
 
@@ -862,6 +899,8 @@ Create a new booking with the provided details. The requesting user must have th
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 ## Update Booking
 
 ### Endpoint
@@ -905,6 +944,8 @@ Update booking information for the specified booking ID. Only the user with the 
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 ## Delete Booking
 
 ### Endpoint
@@ -936,6 +977,8 @@ Delete a booking by its booking ID. This operation can only be performed by the 
   }
 }
 ```
+
+[Back to contents](#table-of-contents)
 
 ## List Bookings by Room and Time Range
 
@@ -978,6 +1021,8 @@ Retrieve bookings per room within the specified time range.
 }
 ```
 
+[Back to contents](#table-of-contents)
+
 ## Retrieve Available Time Slots for a Room
 
 ### Endpoint
@@ -1019,3 +1064,5 @@ Retrieve available time slots for a room within the specified time range.
   ]
 }
 ```
+
+[Back to contents](#table-of-contents)

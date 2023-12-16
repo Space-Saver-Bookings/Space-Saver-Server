@@ -258,13 +258,19 @@ function calculateAvailableTimeSlots(allTimeSlots, bookedTimeSlots) {
  * @returns {string} The ID of the room with the most bookings.
  */
 function mostUsedRoom(bookedTimeSlots) {
+  // Check if the array is empty
+  if (bookedTimeSlots.length === 0) {
+    return null;
+  }
+
   const bookingsByRoom = bookedTimeSlots.reduce((acc, booking) => {
     const roomId = booking.room_id._id;
     acc[roomId] = (acc[roomId] || 0) + 1;
     return acc;
   }, {});
+
   const mostUsedRoomId = Object.keys(bookingsByRoom).reduce((a, b) =>
-  bookingsByRoom[a] > bookingsByRoom[b] ? a : b
+    bookingsByRoom[a] > bookingsByRoom[b] ? a : b
   );
 
   return mostUsedRoomId;

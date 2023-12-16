@@ -54,6 +54,28 @@ Header: `jwt: jwt_token`
 
 Create a new user with provided details. The following fields are required in the request body:
 
+## Create a New Booking
+
+### Endpoint
+
+`POST /bookings`
+
+### Authorization
+
+Header: `jwt: jwt_token`
+
+### Request Body
+
+- `first_name` (required): String -> The first name of the user.
+- `last_name` (required): String -> The last name of the user.
+- `email` (required): String -> The email of the user.
+- `password` (required): String -> Password of the user.
+- `post_code` (required): String -> Post code of the user.
+- `country` (required): String -> Country of the user.
+- `position` (required): String -> Position name of the user.
+
+### Example Request
+
 ```json
 {
   "first_name": "John",
@@ -94,7 +116,13 @@ Create a new user with provided details. The following fields are required in th
 
 Sign in an existing user by providing their email and password. Returns a JSON Web Token (JWT) for authentication.
 
-### Request
+### Request Body
+
+- `email` (required): String -> Email of the user.
+- `title` (required): String -> Password of the user.
+
+### Example Request
+
 
 ```json
 {
@@ -123,7 +151,12 @@ Sign in an existing user by providing their email and password. Returns a JSON W
 
 Extend the validity of a user's JSON Web Token (JWT) by providing the existing token. Useful for keeping the token usable for a longer time.
 
-### Request
+### Request Body
+
+- `jwt` (required): String -> JWT of user login.
+
+### Example Request
+
 
 ```json
 {
@@ -155,7 +188,18 @@ Header: `jwt: jwt_token`
 
 Update user information for the specified user ID. This operation can only be performed by the user.
 
-### Request
+### Request Body
+
+- `first_name` (optional): String -> The first name of the user.
+- `last_name` (optional): String -> The last name of the user.
+- `email` (optional): String -> The email of the user.
+- `password` (optional): String -> Password of the user.
+- `post_code` (optional): String -> Post code of the user.
+- `country` (optional): String -> Country of the user.
+- `position` (optional): String -> Position name of the user.
+
+### Example Request
+
 
 ```json
 {
@@ -389,7 +433,13 @@ Header: `jwt: jwt_token`
 
 Create a new space with the provided details. The requesting user is automatically added as the admin of the space.
 
-### Request
+### Request Body
+
+- `name` (required): String -> The name of the Space.
+- `description` (required): String -> Description of the new Space.
+- `capacity` (required): Integer -> Capacity of the Space.
+
+### Example Request
 
 ```json
 {
@@ -464,7 +514,15 @@ Header: `jwt: jwt_token`
 
 Update space information for the specified space ID. Only the admin of the space can perform this operation.
 
-### Request
+### Request Body
+
+- `admin_id` (optional): String -> The unique ID of the user.
+- `user_ids` (optional): Array -> Unique IDs of all of the users in the Space.
+- `name` (optional): String -> The name of the Space.
+- `description` (optional): String -> Description of the new Space.
+- `capacity` (optional): Integer -> Capacity of the Space.
+
+### Example Request
 
 ```json
 {
@@ -614,7 +672,7 @@ Retrieve information about a specific room using its room ID.
     "user_ids": ["admin_user_id", "user_id1", "user_id2"],
     "name": "Meeting Room A",
     "description": "A cozy meeting room with whiteboard",
-    "invite_code": "abcd1234",
+    "invite_code": "abCd1",
     "capacity": 10
   },
   "name": "Room 101",
@@ -639,7 +697,14 @@ Header: `jwt: jwt_token`
 
 Create a new room with the provided details. The requesting user must be an administrator for the associated space.
 
-### Request
+### Request Body
+
+- `space_id` (required): String -> The unique ID of the Space where the room is located.
+- `name` (required): String -> The name of the room.
+- `description` (required): String -> Description of the new room.
+- `capacity` (required): Integer -> Capacity of the room.
+
+### Example Request
 
 ```json
 {
@@ -662,7 +727,7 @@ Create a new room with the provided details. The requesting user must be an admi
       "user_ids": ["requesting_user_id", "user_id1", "user_id2"],
       "name": "Meeting Room A",
       "description": "A cozy meeting room with whiteboard",
-      "invite_code": "abcd1234",
+      "invite_code": "AbcD1",
       "capacity": 10
     },
     "name": "New Meeting Room",
@@ -688,7 +753,14 @@ Header: `jwt: jwt_token`
 
 Update room information for the specified room ID. Only the administrator of the room can perform this operation.
 
-### Request
+### Request Body
+
+- `space_id` (optional): String -> The unique ID of the Space where the room is located.
+- `name` (optional): String -> The name of the room.
+- `description` (optional): String -> Description of the new room.
+- `capacity` (optional): Integer -> Capacity of the room.
+
+### Example Request
 
 ```json
 {
@@ -710,7 +782,7 @@ Update room information for the specified room ID. Only the administrator of the
     "user_ids": ["admin_user_id", "user_id1", "user_id2"],
     "name": "New Meeting Room",
     "description": "Modern meeting room with video conferencing",
-    "invite_code": "abcd1234",
+    "invite_code": "D1234",
     "capacity": 12
   },
   "name": "Updated Lounge",
@@ -748,7 +820,7 @@ Delete a room by its room ID. This operation can only be performed by the admini
       "user_ids": ["admin_user_id", "user_id1", "user_id2"],
       "name": "Meeting Room A",
       "description": "A cozy meeting room with whiteboard",
-      "invite_code": "abcd1234",
+      "invite_code": "1234a",
       "capacity": 10
     },
     "name": "Updated Lounge",
@@ -864,21 +936,27 @@ Retrieve information about a specific booking using its booking ID.
 
 Header: `jwt: jwt_token`
 
-### Description
+### Request Body
 
-Create a new booking with the provided details. The requesting user must have the necessary permissions.
+- `room_id` (required): The ID of the room for the booking.
+- `title` (required): The title of the booking.
+- `primary_user_id` (optional): The ID of the primary user for the booking. If not provided, it will default to the current logged-in user.
+- `invited_user_ids` (optional): An array of user IDs invited to the booking.
+- `description` (required): Description for the booking.
+- `start_time` (required): The start time of the booking.
+- `end_time` (required): The end time of the booking.
 
-### Request
+### Example Request
 
 ```json
 {
-  "room_id": "room_id",
-  "primary_user_id": "user_id",
+  "room_id": "your_room_id",
+  "title": "Meeting 1",
+  "primary_user_id": "optional_primary_user_id",
   "invited_user_ids": ["user_id1", "user_id2"],
-  "title": "Team Meeting",
-  "description": "Discuss upcoming projects",
-  "start_time": "2023-12-15T10:00:00Z",
-  "end_time": "2023-12-15T11:30:00Z"
+  "description": "This is Meeting 1",
+  "start_time": "2023-01-01T08:00:00.000Z",
+  "end_time": "2023-01-01T09:00:00.000Z",
 }
 ```
 
@@ -915,7 +993,17 @@ Header: `jwt: jwt_token`
 
 Update booking information for the specified booking ID. Only the user with the necessary permissions can perform this operation.
 
-### Request
+### Request Body
+
+- `room_id` (optional): String -> The ID of the room for the booking.
+- `primary_user_id` (optional): String -> The ID of the primary user for the booking.
+- `invited_user_ids` (optional): Array of Strings -> An array of user IDs invited to the booking.
+- `title` (optional): String -> The title of the booking.
+- `description` (optional): String -> Description for the booking.
+- `start_time` (optional): String -> The start time of the booking.
+- `end_time` (optional): String -> The end time of the booking.
+
+### Example Request
 
 ```json
 {

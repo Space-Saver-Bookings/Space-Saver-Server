@@ -67,7 +67,7 @@ router.post('/', verifyJwtHeader, async (request, response, next) => {
     const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
     const invite_code = await generateAccessCode();
 
-    const user_ids = [requestingUserID, ...request.body.user_ids];
+    const user_ids = [requestingUserID];
 
     let newSpaceDoc = null;
 

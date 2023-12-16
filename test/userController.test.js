@@ -60,7 +60,7 @@ describe('User Router', () => {
         position: 'Manager',
       });
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(409);
     });
   });
 

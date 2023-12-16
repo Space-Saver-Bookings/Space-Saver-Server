@@ -54,16 +54,6 @@ Header: `jwt: jwt_token`
 
 Create a new user with provided details. The following fields are required in the request body:
 
-## Create a New Booking
-
-### Endpoint
-
-`POST /bookings`
-
-### Authorization
-
-Header: `jwt: jwt_token`
-
 ### Request Body
 
 - `first_name` (required): String -> The first name of the user.

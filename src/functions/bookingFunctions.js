@@ -185,6 +185,142 @@ function generateTimeSlots(startTime, endTime, interval) {
   return timeSlots;
 }
 
+/**
+ * Extracts booked time slots from the filtered bookings.
+ *
+ * @param {Array} filteredBookings - An array of filtered bookings.
+ * @param {string} requestingUserID - The ID of the user making the request.
+ * @returns {Object} An object where keys are room IDs and values are arrays of booked time slots.
+ */
+function extractBookedTimeSlots(filteredBookings, requestingUserID) {
+  const bookedTimeSlots = {};
+  filteredBookings.forEach((booking) => {
+    const roomID = booking.room_id._id;
+
+    // Validate that the room belongs to the user
+    const isRoomValid = validateRoomBelongsToUser(roomID, requestingUserID);
+    if (isRoomValid) {
+      if (!bookedTimeSlots[roomID]) {
+        bookedTimeSlots[roomID] = [];
+      }
+
+      bookedTimeSlots[roomID].push({
+        start_time: new Date(booking.start_time),
+        end_time: new Date(booking.end_time),
+      });
+    }
+  });
+  return bookedTimeSlots;
+}
+
+/**
+ * Extracts query parameters from the request object.
+ *
+ * @param {Object} request - The HTTP request object.
+ * @returns {Object} An object containing extracted query parameters.
+ */
+function extractQueryParameters(request) {
+  const startTime = new Date(request.query.start_time || new Date());
+  const endDateDefault = new Date();
+  endDateDefault.setDate(endDateDefault.getDate() + 1);
+  const endTime = new Date(request.query.end_time || endDateDefault);
+  const interval = parseInt(request.query.interval || 30, 10); // Default to 30 minutes if not provided
+
+  return {startTime, endTime, interval};
+}
+
+/**
+ * Calculates available time slots based on all time slots and booked time slots.
+ *
+ * @param {Array} allTimeSlots - An array of all time slots.
+ * @param {Object} bookedTimeSlots - An object where keys are room IDs and values are arrays of booked time slots.
+ * @returns {Object} An object where keys are room IDs and values are arrays of available time slots.
+ */
+function calculateAvailableTimeSlots(allTimeSlots, bookedTimeSlots) {
+  const availableTimeSlots = {};
+  Object.keys(bookedTimeSlots).forEach((roomID) => {
+    availableTimeSlots[roomID] = allTimeSlots.filter(
+      (slot) =>
+        !bookedTimeSlots[roomID].some(
+          (booking) =>
+            slot.available_start_time < booking.end_time &&
+            slot.available_end_time > booking.start_time
+        )
+    );
+  });
+  return availableTimeSlots;
+}
+
+/**
+ * Identifies the room with the most bookings.
+ *
+ * @param {Array} bookedTimeSlots - An array of booked time slots.
+ * @returns {string} The ID of the room with the most bookings.
+ */
+function mostUsedRoom(bookedTimeSlots) {
+  const bookingsByRoom = bookedTimeSlots.reduce((acc, booking) => {
+    const roomId = booking.room_id._id;
+    acc[roomId] = (acc[roomId] || 0) + 1;
+    return acc;
+  }, {});
+  const mostUsedRoomId = Object.keys(bookingsByRoom).reduce((a, b) =>
+  bookingsByRoom[a] > bookingsByRoom[b] ? a : b
+  );
+
+  return mostUsedRoomId;
+}
+
+/**
+ * Calculates the number of rooms in use at a specific date/time.
+ *
+ * @param {Array} bookedTimeSlots - An array of booked time slots.
+ * @param {Date} date - The date and time to check for room occupancy.
+ * @returns {number} The number of rooms in use at the specified date/time.
+ */
+function numberOfRoomsInUse(bookedTimeSlots, date) {
+  const roomsInUse = bookedTimeSlots
+    .filter((booking) => {
+      const startTime = new Date(booking.start_time);
+      const endTime = new Date(booking.end_time);
+      return startTime <= date && endTime >= date;
+    })
+    .map((booking) => booking.room_id.toString()) // Assuming room_id is an ObjectId
+    .filter((value, index, self) => self.indexOf(value) === index);
+
+  return roomsInUse.length;
+}
+
+/**
+ * Calculates the number of primary and invited users in rooms at a specific date/time.
+ *
+ * @param {Array} bookedTimeSlots - An array of booked time slots.
+ * @param {Date} date - The date and time to check for user occupancy.
+ * @returns {Object} An object with the number of primary users, invited users, and the total number of users.
+ */
+function numberOfUsersInRooms(bookedTimeSlots, date) {
+  const usersInRooms = bookedTimeSlots.reduce(
+    (acc, booking) => {
+      const startTime = new Date(booking.start_time);
+      const endTime = new Date(booking.end_time);
+      if (startTime <= date && endTime >= date) {
+        acc.primaryUsers.add(booking.primary_user_id.toString()); // Assuming primary_user_id is an ObjectId
+        booking.invited_user_ids.forEach((userId) =>
+          acc.invitedUsers.add(userId.toString())
+        );
+      }
+      return acc;
+    },
+    {primaryUsers: new Set(), invitedUsers: new Set()}
+  );
+
+  return {
+    numberOfPrimaryUsers: usersInRooms.primaryUsers.size,
+    numberOfInvitedUsers: usersInRooms.invitedUsers.size,
+    totalNumberOfUsers:
+      usersInRooms.primaryUsers.size + usersInRooms.invitedUsers.size,
+  };
+}
+
 // --------------------------------------
 // ----- Exports
 
@@ -199,4 +335,10 @@ module.exports = {
   validateUserPermission,
   roundUpToInterval,
   generateTimeSlots,
+  extractQueryParameters,
+  extractBookedTimeSlots,
+  calculateAvailableTimeSlots,
+  mostUsedRoom,
+  numberOfRoomsInUse,
+  numberOfUsersInRooms,
 };

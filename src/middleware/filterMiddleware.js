@@ -6,6 +6,13 @@ const {Room} = require('../models/RoomModel');
 const {User} = require('../models/UserModel');
 const {handleErrors} = require('./sharedMiddleware');
 
+/**
+ * Middleware to filter users based on the requesting user's spaces.
+ * Appends space_ids to each user object and includes the requesting user in the list.
+ * @param {Object} request - Express request object.
+ * @param {Object} response - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
 const filterUsersMiddleware = async (request, response, next) => {
   try {
     const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
@@ -25,7 +32,7 @@ const filterUsersMiddleware = async (request, response, next) => {
     const uniqueUserIds = [...new Set(allUserIds)];
 
     // Fetch users based on unique user_ids
-    const filteredUsers = await User.find({_id: {$in: uniqueUserIds}});
+    const filteredUsers = await User.find({ _id: { $in: uniqueUserIds } });
 
     // Check if the requesting user is already in the filtered list
     const isRequestingUserInList = filteredUsers.some((user) =>
@@ -45,9 +52,9 @@ const filterUsersMiddleware = async (request, response, next) => {
           .map((space) => space._id);
 
         // Omitting __v and password fields from the user object
-        const {__v, password, ...userWithoutVAndPassword} = user.toObject();
+        const { __v, password, ...userWithoutVAndPassword } = user.toObject();
 
-        return {...userWithoutVAndPassword, space_ids: spaceIdsForUser};
+        return { ...userWithoutVAndPassword, space_ids: spaceIdsForUser };
       });
 
       // Append details of the requesting user to the filtered user list
@@ -66,6 +73,12 @@ const filterUsersMiddleware = async (request, response, next) => {
   }
 };
 
+/**
+ * Middleware to filter spaces where the requesting user is an admin or part of user_ids.
+ * @param {Object} request - Express request object.
+ * @param {Object} response - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
 const filterSpacesMiddleware = async (request, response, next) => {
   try {
     const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
@@ -74,7 +87,7 @@ const filterSpacesMiddleware = async (request, response, next) => {
 
     // Filter spaces where the user is an admin or part of user_ids
     const filteredSpaces = userSpaces.map((space) => {
-      const {__v, ...spaceWithoutV} = space.toObject();
+      const { __v, ...spaceWithoutV } = space.toObject();
       return spaceWithoutV;
     });
 
@@ -87,6 +100,12 @@ const filterSpacesMiddleware = async (request, response, next) => {
   }
 };
 
+/**
+ * Middleware to filter rooms based on the requesting user's spaces.
+ * @param {Object} request - Express request object.
+ * @param {Object} response - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
 const filterRoomsMiddleware = async (request, response, next) => {
   try {
     const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
@@ -96,7 +115,7 @@ const filterRoomsMiddleware = async (request, response, next) => {
 
     // Fetch rooms with at least one matching space ID
     request.filteredRooms = await Room.find({
-      space_id: {$in: spaceIds},
+      space_id: { $in: spaceIds },
     });
 
     next();
@@ -105,6 +124,12 @@ const filterRoomsMiddleware = async (request, response, next) => {
   }
 };
 
+/**
+ * Middleware to filter bookings based on the requesting user's rooms.
+ * @param {Object} request - Express request object.
+ * @param {Object} response - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
 const filterBookingsMiddleware = async (request, response, next) => {
   try {
     const requestingUserID = await getUserIdFromJwt(request.headers.jwt);

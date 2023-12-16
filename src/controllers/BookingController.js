@@ -1,14 +1,11 @@
 // import Express library
 const express = require('express');
 
-const {Booking} = require('../models/BookingModel');
 const {verifyJwtHeader} = require('../middleware/sharedMiddleware');
 
-// make an instance of a Router
 const router = express.Router();
 
 const {
-  getAllBookings,
   getOneBooking,
   createBooking,
   updateBooking,
@@ -17,7 +14,14 @@ const {
   validateRoomBelongsToUser,
   validateUserPermission,
   generateTimeSlots,
+  extractBookedTimeSlots,
+  calculateAvailableTimeSlots,
+  extractQueryParameters,
+  mostUsedRoom,
+  numberOfRoomsInUse,
+  numberOfUsersInRooms,
 } = require('../functions/bookingFunctions');
+
 const {getUserIdFromJwt} = require('../functions/userFunctions');
 const {filterBookingsMiddleware} = require('../middleware/filterMiddleware');
 
@@ -48,7 +52,7 @@ router.get(
   filterBookingsMiddleware,
   async (request, response, next) => {
     try {
-      const { filteredBookings } = request;
+      const {filteredBookings} = request;
       const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
 
       // Extract query parameters
@@ -87,7 +91,7 @@ router.get(
         bookings: bookingsPerRoom[roomID],
       }));
 
-      response.json({ bookingsPerRoom: formattedResult });
+      response.json({bookingsPerRoom: formattedResult});
     } catch (error) {
       next(error);
     }
@@ -95,56 +99,66 @@ router.get(
 );
 
 // Retrieve available time slots for a room
-router.get('/available-time-slots', verifyJwtHeader, filterBookingsMiddleware, async (request, response, next) => {
-  try {
-    const { filteredBookings } = request;
-    const requestingUserID = await getUserIdFromJwt(request.headers.jwt); // Assuming you have a user ID in the JWT payload
+router.get(
+  '/available-time-slots',
+  verifyJwtHeader,
+  filterBookingsMiddleware,
+  async (request, response, next) => {
+    try {
+      const {filteredBookings} = request;
+      const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
 
-    // Extract query parameters
-    const startTime = new Date(request.query.start_time || new Date());
-    const endDateDefault = new Date();
-    endDateDefault.setDate(endDateDefault.getDate() + 1);
-    const endTime = new Date(request.query.end_time || endDateDefault);
-    const interval = parseInt(request.query.interval || 30, 10); // Default to 30 minutes if not provided
+      // Extract query parameters
+      const {startTime, endTime, interval} = extractQueryParameters(request);
 
-    // Generate all time slots within the specified range and interval
-    const allTimeSlots = generateTimeSlots(startTime, endTime, interval);
+      // Generate all time slots within the specified range and interval
+      const allTimeSlots = generateTimeSlots(startTime, endTime, interval);
 
-    // Extract booked time slots
-    const bookedTimeSlots = {};
-    filteredBookings.forEach((booking) => {
-      const roomID = booking.room_id._id;
-
-      // Validate that the room belongs to the user
-      const isRoomValid = validateRoomBelongsToUser(roomID, requestingUserID);
-      if (isRoomValid) {
-        if (!bookedTimeSlots[roomID]) {
-          bookedTimeSlots[roomID] = [];
-        }
-
-        bookedTimeSlots[roomID].push({ start_time: new Date(booking.start_time), end_time: new Date(booking.end_time) });
-      }
-    });
-
-    // Calculate available time slots by subtracting booked time slots from all time slots
-    const availableTimeSlots = {};
-    Object.keys(bookedTimeSlots).forEach((roomID) => {
-      availableTimeSlots[roomID] = allTimeSlots.filter(
-        (slot) => !bookedTimeSlots[roomID].some((booking) => slot.available_start_time < booking.end_time && slot.available_end_time > booking.start_time)
+      // Extract booked time slots
+      const bookedTimeSlots = extractBookedTimeSlots(
+        filteredBookings,
+        requestingUserID
       );
-    });
 
-    // Return the available time slots with room ID in the response
-    const formattedResponse = Object.keys(availableTimeSlots).map((roomID) => ({
-      room_id: roomID,
-      time_slots: availableTimeSlots[roomID],
-    }));
+      // Calculate available time slots
+      const availableTimeSlots = calculateAvailableTimeSlots(
+        allTimeSlots,
+        bookedTimeSlots
+      );
 
-    response.json({ availableTimeSlots: formattedResponse });
-  } catch (error) {
-    next(error);
+      // Calculate additional information
+      const dateToCheck = new Date(); // You can replace this with the specific date you want to check
+      const mostUsedRoomResult = mostUsedRoom(filteredBookings);
+      const roomsInUseResult = numberOfRoomsInUse(
+        filteredBookings,
+        dateToCheck
+      );
+      const usersInRoomsResult = numberOfUsersInRooms(
+        filteredBookings,
+        dateToCheck
+      );
+
+      // Return the available time slots with room ID and additional information in the response
+      const formattedResponse = Object.keys(availableTimeSlots).map(
+        (roomID) => ({
+          room_id: roomID,
+          time_slots: availableTimeSlots[roomID],
+        })
+      );
+
+      response.json({
+        availableTimeSlots: formattedResponse,
+        mostUsedRoom: mostUsedRoomResult,
+        numberOfRoomsInUse: roomsInUseResult,
+        numberOfUsersInRooms: usersInRoomsResult,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
+
+// Get booking by ID
 router.get(
   '/:bookingID',
   verifyJwtHeader,
@@ -214,7 +228,7 @@ router.put('/:bookingID', verifyJwtHeader, async (request, response, next) => {
     const booking = await getOneBooking(request.params.bookingID);
 
     if (!booking) {
-      return response.status(404).json({ message: 'Booking not found' });
+      return response.status(404).json({message: 'Booking not found'});
     }
 
     if (!validateUserPermission(booking, requestingUserID)) {
@@ -236,7 +250,7 @@ router.put('/:bookingID', verifyJwtHeader, async (request, response, next) => {
       if (!validation) {
         return response
           .status(400)
-          .json({ message: `Could not find room with id: ${roomID}` });
+          .json({message: `Could not find room with id: ${roomID}`});
       }
     }
 
@@ -264,41 +278,44 @@ router.put('/:bookingID', verifyJwtHeader, async (request, response, next) => {
     const updatedBooking = await updateBooking(roomDetails);
 
     if (!updatedBooking) {
-      return response.status(404).json({ message: 'Booking not found' });
+      return response.status(404).json({message: 'Booking not found'});
     }
 
     response.json(updatedBooking);
   } catch (error) {
-    next(error)
+    next(error);
   }
 });
-
 
 // Delete a specific booking
-router.delete('/:bookingID', verifyJwtHeader, async (request, response, next) => {
-  const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+router.delete(
+  '/:bookingID',
+  verifyJwtHeader,
+  async (request, response, next) => {
+    const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
 
-  try {
-    const booking = await getOneBooking(request.params.bookingID);
+    try {
+      const booking = await getOneBooking(request.params.bookingID);
 
-    if (!booking) {
-      return response.status(404).json({ message: 'Booking not found' });
+      if (!booking) {
+        return response.status(404).json({message: 'Booking not found'});
+      }
+
+      if (validateUserPermission(booking, requestingUserID)) {
+        const deletedBooking = await deleteBooking(request.params.bookingID);
+        response.json({
+          message: 'Booking deleted successfully',
+          booking: deletedBooking,
+        });
+      } else {
+        response.status(403).json({
+          message: 'Unauthorised. You do not have permission.',
+        });
+      }
+    } catch (error) {
+      next(error);
     }
-
-    if (validateUserPermission(booking, requestingUserID)) {
-      const deletedBooking = await deleteBooking(request.params.bookingID);
-      response.json({
-        message: 'Booking deleted successfully',
-        booking: deletedBooking,
-      });
-    } else {
-      response.status(403).json({
-        message: 'Unauthorised. You do not have permission.',
-      });
-    }
-  } catch (error) {
-    next(error)
   }
-});
+);
 
 module.exports = router;

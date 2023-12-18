@@ -6,11 +6,11 @@ const {getAllRooms} = require('./roomFunctions');
 /**
  * Returns an array of raw MongoDB database documents containing bookings associated with user's rooms.
  *
- * @param {string} requestingUserID - The ID of the user making the request.
+ * @param {string} requestingUserId - The Id of the user making the request.
  * @returns {Array} An array of raw MongoDB database documents representing bookings.
  */
-async function getAllBookings(requestingUserID) {
-  const userRooms = await getAllRooms(requestingUserID);
+async function getAllBookings(requestingUserId) {
+  const userRooms = await getAllRooms(requestingUserId);
   const roomIds = userRooms.map((room) => room._id);
   return await Booking.find({room_id: {$in: roomIds}});
 }
@@ -18,11 +18,11 @@ async function getAllBookings(requestingUserID) {
 /**
  * Returns a single raw MongoDB database document for a specific booking.
  *
- * @param {string} bookingID - The ID of the booking to retrieve.
+ * @param {string} bookingId - The Id of the booking to retrieve.
  * @returns {Object|null} A raw MongoDB database document representing a booking or null if not found.
  */
-async function getOneBooking(bookingID) {
-  return await Booking.findOne({_id: bookingID});
+async function getOneBooking(bookingId) {
+  return await Booking.findOne({_id: bookingId});
 }
 
 /**
@@ -74,7 +74,7 @@ async function createBooking(bookingDetails) {
 async function updateBooking(bookingDetails) {
   // Find booking, update it, return the updated booking data.
   return await Booking.findByIdAndUpdate(
-    bookingDetails.bookingID,
+    bookingDetails.bookingId,
     bookingDetails.updatedData,
     {new: true}
   ).exec();
@@ -83,11 +83,11 @@ async function updateBooking(bookingDetails) {
 /**
  * Deletes an existing booking.
  *
- * @param {string} bookingID - The ID of the booking to delete.
+ * @param {string} bookingId - The Id of the booking to delete.
  * @returns {Object|null} The raw MongoDB database document representing the deleted booking or null if not found.
  */
-async function deleteBooking(bookingID) {
-  return await Booking.findByIdAndDelete(bookingID).exec();
+async function deleteBooking(bookingId) {
+  return await Booking.findByIdAndDelete(bookingId).exec();
 }
 
 /**
@@ -105,16 +105,16 @@ function filterUndefinedProperties(obj) {
 /**
  * Validates whether a room belongs to a user.
  *
- * @param {string} roomID - The ID of the room to validate.
- * @param {string} requestingUserID - The ID of the user making the request.
+ * @param {string} roomId - The Id of the room to validate.
+ * @param {string} requestingUserId - The Id of the user making the request.
  * @returns {boolean} True if the room belongs to the user, false otherwise.
  */
-async function validateRoomBelongsToUser(roomID, requestingUserID) {
+async function validateRoomBelongsToUser(roomId, requestingUserId) {
   try {
-    const userRooms = await getAllRooms(requestingUserID);
+    const userRooms = await getAllRooms(requestingUserId);
     const userRoomIds = userRooms.map((room) => room._id.toString()); // Convert to strings for comparison
 
-    if (!userRoomIds.includes(roomID)) {
+    if (!userRoomIds.includes(roomId)) {
       return false;
     }
     return true;
@@ -127,15 +127,15 @@ async function validateRoomBelongsToUser(roomID, requestingUserID) {
  * Validates user permission to access a booking.
  *
  * @param {Object} booking - The booking to validate permission against.
- * @param {string} requestingUserID - The ID of the user making the request.
+ * @param {string} requestingUserId - The Id of the user making the request.
  * @returns {boolean} True if the user has permission, false otherwise.
  */
-const validateUserPermission = (booking, requestingUserID) => {
+const validateUserPermission = (booking, requestingUserId) => {
   if (
-    requestingUserID !== booking.primary_user_id._id.toString() &&
+    requestingUserId !== booking.primary_user_id._id.toString() &&
     !booking.invited_user_ids
       .map((id) => id.toString())
-      .includes(requestingUserID)
+      .includes(requestingUserId)
   ) {
     return false;
   }
@@ -189,22 +189,22 @@ function generateTimeSlots(startTime, endTime, interval) {
  * Extracts booked time slots from the filtered bookings.
  *
  * @param {Array} filteredBookings - An array of filtered bookings.
- * @param {string} requestingUserID - The ID of the user making the request.
- * @returns {Object} An object where keys are room IDs and values are arrays of booked time slots.
+ * @param {string} requestingUserId - The Id of the user making the request.
+ * @returns {Object} An object where keys are room Ids and values are arrays of booked time slots.
  */
-function extractBookedTimeSlots(filteredBookings, requestingUserID) {
+function extractBookedTimeSlots(filteredBookings, requestingUserId) {
   const bookedTimeSlots = {};
   filteredBookings.forEach((booking) => {
-    const roomID = booking.room_id._id;
+    const roomId = booking.room_id._id;
 
     // Validate that the room belongs to the user
-    const isRoomValid = validateRoomBelongsToUser(roomID, requestingUserID);
+    const isRoomValid = validateRoomBelongsToUser(roomId, requestingUserId);
     if (isRoomValid) {
-      if (!bookedTimeSlots[roomID]) {
-        bookedTimeSlots[roomID] = [];
+      if (!bookedTimeSlots[roomId]) {
+        bookedTimeSlots[roomId] = [];
       }
 
-      bookedTimeSlots[roomID].push({
+      bookedTimeSlots[roomId].push({
         start_time: new Date(booking.start_time),
         end_time: new Date(booking.end_time),
       });
@@ -233,15 +233,15 @@ function extractQueryParameters(request) {
  * Calculates available time slots based on all time slots and booked time slots.
  *
  * @param {Array} allTimeSlots - An array of all time slots.
- * @param {Object} bookedTimeSlots - An object where keys are room IDs and values are arrays of booked time slots.
- * @returns {Object} An object where keys are room IDs and values are arrays of available time slots.
+ * @param {Object} bookedTimeSlots - An object where keys are room Ids and values are arrays of booked time slots.
+ * @returns {Object} An object where keys are room Ids and values are arrays of available time slots.
  */
 function calculateAvailableTimeSlots(allTimeSlots, bookedTimeSlots) {
   const availableTimeSlots = {};
-  Object.keys(bookedTimeSlots).forEach((roomID) => {
-    availableTimeSlots[roomID] = allTimeSlots.filter(
+  Object.keys(bookedTimeSlots).forEach((roomId) => {
+    availableTimeSlots[roomId] = allTimeSlots.filter(
       (slot) =>
-        !bookedTimeSlots[roomID].some(
+        !bookedTimeSlots[roomId].some(
           (booking) =>
             slot.available_start_time < booking.end_time &&
             slot.available_end_time > booking.start_time
@@ -255,7 +255,7 @@ function calculateAvailableTimeSlots(allTimeSlots, bookedTimeSlots) {
  * Identifies the room with the most bookings.
  *
  * @param {Array} bookedTimeSlots - An array of booked time slots.
- * @returns {string} The ID of the room with the most bookings.
+ * @returns {string} The Id of the room with the most bookings.
  */
 function mostUsedRoom(bookedTimeSlots) {
   // Check if the array is empty

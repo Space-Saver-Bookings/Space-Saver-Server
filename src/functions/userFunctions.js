@@ -68,7 +68,12 @@ async function generateUserJWT(userDetails) {
   // Encrypt the payload so that it's not plaintext when viewed outside of this app.
   let encryptedUserData = encryptString(JSON.stringify(userDetails));
   // The expiresIn option only works if the payload is an object, not a string.
-  return generateJWT({data: encryptedUserData});
+  // Include userId directly in the payload without encryption.
+  const payload = {
+    userId: userDetails.userId,
+    data: encryptedUserData,
+  };
+  return generateJWT(payload);
 }
 
 /**
@@ -80,28 +85,36 @@ async function generateUserJWT(userDetails) {
  */
 async function verifyUserJWT(userJWT) {
   try {
-    // Verify that the JWT is still valid.
     let userJwtVerified = jwt.verify(userJWT, process.env.JWT_SECRET, {
       complete: true,
     });
-    
+
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+
+    if (
+      userJwtVerified.payload.exp &&
+      userJwtVerified.payload.exp < nowInSeconds
+    ) {
+      throw new Error('Token expired');
+    }
+
     // Decrypt the encrypted payload.
     let decryptedJwtPayload = decryptString(userJwtVerified.payload.data);
-    
+
     // Parse the decrypted data into an object.
     let userData = JSON.parse(decryptedJwtPayload);
 
     // Find the user mentioned in the JWT.
-    let targetUser = await User.findById(userData.userID).exec();
+    let targetUser = await User.findById(userData.userId).exec();
 
     // If the JWT data matches the stored data...
     if (
       targetUser &&
-      ((targetUser.password, userData.password)) &&
+      (targetUser.password, userData.password) &&
       targetUser.email == userData.email
     ) {
       // ...User details are valid, make a fresh JWT to extend their token's valid time
-      return generateJWT({data: userJwtVerified.payload.data});
+      return generateJWT({ data: userJwtVerified.payload.data });
     } else {
       // Otherwise, user details are invalid and they don't get a new token.
       // When a frontend receives this error, it should redirect to a sign-in page.
@@ -109,15 +122,28 @@ async function verifyUserJWT(userJWT) {
     }
   } catch (error) {
     console.error(error);
-    throw new Error('Invalid user token.');
+
+    if (error.message === 'Token expired') {
+      // Handle token expiration response
+      response.status(401).json({
+        error: 'Token expired',
+        message: 'The provided token has expired. Please log in again to obtain a new token.'
+      });
+    } else {
+      // Handle other verification errors
+      response.status(401).json({
+        error: 'Invalid JWT',
+        message: 'The provided token is invalid.'
+      });
+    }
   }
 }
 
 /**
- * Returns the user ID extracted from a user JWT.
+ * Returns the user Id extracted from a user JWT.
  *
- * @param {string} userJWT - The user JWT containing the user ID.
- * @returns {string} The user ID.
+ * @param {string} userJWT - The user JWT containing the user Id.
+ * @returns {string} The user Id.
  * @throws {Error} If the JWT is invalid.
  */
 async function getUserIdFromJwt(userJWT) {
@@ -133,7 +159,7 @@ async function getUserIdFromJwt(userJWT) {
     let userData = JSON.parse(decryptedJwtPayload);
 
     // Find the user mentioned in the JWT.
-    let targetUser = await User.findById(userData.userID).exec();
+    let targetUser = await User.findById(userData.userId).exec();
 
     // If the JWT data matches the stored data...
     if (
@@ -141,8 +167,8 @@ async function getUserIdFromJwt(userJWT) {
       targetUser.password == userData.password &&
       targetUser.email == userData.email
     ) {
-      // Return the user ID
-      return userData.userID;
+      // Return the user Id
+      return userData.userId;
     } else {
       // Otherwise, user details are invalid.
       throw new Error('Invalid user token.');
@@ -227,20 +253,20 @@ async function createUser(userDetails) {
 async function updateUser(userDetails) {
   // Find user, update it, return the updated user data.
   return await User.findByIdAndUpdate(
-    userDetails.userID,
+    userDetails.userId,
     userDetails.updatedData,
     {returnDocument: 'after'}
   ).exec();
 }
 
 /**
- * Deletes an existing user by ID.
+ * Deletes an existing user by Id.
  *
- * @param {string} userID - The ID of the user to delete.
+ * @param {string} userId - The Id of the user to delete.
  * @returns {Object|null} The raw MongoDB database document representing the deleted user or null if not found.
  */
-async function deleteUser(userID) {
-  return await User.findByIdAndDelete(userID).exec();
+async function deleteUser(userId) {
+  return await User.findByIdAndDelete(userId).exec();
 }
 
 /**

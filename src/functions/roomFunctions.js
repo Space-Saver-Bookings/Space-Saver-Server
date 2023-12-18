@@ -8,23 +8,23 @@ const {getUserIdFromJwt} = require('./userFunctions');
 /**
  * Returns an array of raw MongoDB database documents containing rooms associated with user's spaces.
  *
- * @param {string} requestingUserID - The ID of the user making the request.
+ * @param {string} requestingUserId - The Id of the user making the request.
  * @returns {Array} An array of raw MongoDB database documents representing rooms.
  */
-async function getAllRooms(requestingUserID) {
-  const userSpaces = await getAllSpaces(requestingUserID)
-  const spaceIds = userSpaces.map(space => space._id)
-  return await Room.find({ space_id: { $in: spaceIds } })
+async function getAllRooms(requestingUserId) {
+  const userSpaces = await getAllSpaces(requestingUserId);
+  const spaceIds = userSpaces.map((space) => space._id);
+  return await Room.find({space_id: {$in: spaceIds}});
 }
 
 /**
  * Returns a single raw MongoDB database document for a specific room.
  *
- * @param {string} roomID - The ID of the room to retrieve.
+ * @param {string} roomId - The Id of the room to retrieve.
  * @returns {Object|null} A raw MongoDB database document representing a room or null if not found.
  */
-async function getOneRoom(roomID) {
-  return await Room.findOne({_id: roomID}).populate('space_id');
+async function getOneRoom(roomId) {
+  return await Room.findOne({_id: roomId}).populate('space_id');
 }
 
 /**
@@ -55,7 +55,7 @@ async function createRoom(roomDetails) {
 async function updateRoom(roomDetails) {
   // Find room, update it, return the updated room data.
   return await Room.findByIdAndUpdate(
-    roomDetails.roomID,
+    roomDetails.roomId,
     roomDetails.updatedData,
     {returnDocument: 'after'}
   ).exec();
@@ -64,11 +64,11 @@ async function updateRoom(roomDetails) {
 /**
  * Deletes an existing room.
  *
- * @param {string} roomID - The ID of the room to delete.
+ * @param {string} roomId - The Id of the room to delete.
  * @returns {Object|null} The raw MongoDB database document representing the deleted room or null if not found.
  */
-async function deleteRoom(roomID) {
-  return await Room.findByIdAndDelete(roomID).exec();
+async function deleteRoom(roomId) {
+  return await Room.findByIdAndDelete(roomId).exec();
 }
 
 /**
@@ -91,22 +91,22 @@ function filterUndefinedProperties(obj) {
  */
 async function isRequestingUserAdmin(request) {
   try {
-    const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
-    let spaceID = null
+    const requestingUserId = await getUserIdFromJwt(request.headers.jwt);
+    let spaceId = null;
     if (request.body.space_id) {
-      spaceID = request.body.space_id;
+      spaceId = request.body.space_id;
     } else {
-      const roomID = request.params.roomID
-      const room = await getOneRoom(roomID)
-      spaceID = room.space_id._id.toString()
+      const roomId = request.params.roomId;
+      const room = await getOneRoom(roomId);
+      spaceId = room.space_id._id.toString();
     }
-    
-    const existingSpace = await getOneSpace(spaceID);
+
+    const existingSpace = await getOneSpace(spaceId);
 
     if (
       existingSpace &&
-      existingSpace._id.toString() === spaceID &&
-      existingSpace.admin_id._id.toString() === requestingUserID
+      existingSpace._id.toString() === spaceId &&
+      existingSpace.admin_id._id.toString() === requestingUserId
     ) {
       return true;
     } else {
@@ -117,7 +117,6 @@ async function isRequestingUserAdmin(request) {
     return false;
   }
 }
-
 
 // --------------------------------------
 // ----- Exports

@@ -30,8 +30,15 @@ const SpaceSchema = new mongoose.Schema({
   },
 });
 
+// Populate fields, remove password and __v fields
 SpaceSchema.pre(/^find/, function (next) {
-  this.populate('admin_id').populate('user_ids');
+  this.populate({
+    path: 'admin_id',
+    select: '-password -__v',
+  }).populate({
+    path: 'user_ids',
+    select: '-password -__v',
+  });
   next();
 });
 

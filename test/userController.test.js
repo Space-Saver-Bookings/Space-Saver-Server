@@ -133,7 +133,7 @@ describe('User Router', () => {
     });
   });
 
-  describe('GET /users/:userID', () => {
+  describe('GET /users/:userId', () => {
     it('should return a specific user', async () => {
       const loginResponse = await request(app).post('/users/login').send({
         email: 'test.user2@test1.com',
@@ -142,13 +142,13 @@ describe('User Router', () => {
 
       const jwt = await loginResponse.body.jwt;
 
-      // Get the ID of the registered user
+      // Get the Id of the registered user
       const user = await User.findOne({email: 'test.user2@test1.com'});
-      const userID = user._id.toString();
+      const userId = user._id.toString();
 
       // Make a request to the endpoint with the JWT in the headers
       const response = await request(app)
-        .get(`/users/${userID}`)
+        .get(`/users/${userId}`)
         .set('jwt', jwt);
 
       expect(response.status).toBe(200);
@@ -165,7 +165,7 @@ describe('User Router', () => {
 
       // Make a request to the endpoint with the JWT in the headers
       const response = await request(app)
-        .get('/users/nonexistentUserID')
+        .get('/users/nonexistentUserId')
         .set('jwt', jwt);
 
       expect(response.status).toBe(404);
@@ -173,7 +173,7 @@ describe('User Router', () => {
     });
   });
 
-  describe('PUT /users/:userID', () => {
+  describe('PUT /users/:userId', () => {
     it('should update a user', async () => {
       const loginResponse = await request(app).post('/users/login').send({
         email: 'test.user2@test1.com',
@@ -182,13 +182,13 @@ describe('User Router', () => {
 
       const jwt = await loginResponse.body.jwt;
 
-      // Get the ID of the registered user
+      // Get the Id of the registered user
       const user = await User.findOne({email: 'test.user2@test1.com'});
-      const userID = user._id.toString();
+      const userId = user._id.toString();
 
       // Make a request to the endpoint with the JWT in the headers
       const response = await request(app)
-        .put(`/users/${userID}`)
+        .put(`/users/${userId}`)
         .set('jwt', jwt)
         .send({
           first_name: 'UpdatedTest',
@@ -210,7 +210,7 @@ describe('User Router', () => {
 
       // Make a request to the endpoint with the JWT in the headers
       const response = await request(app)
-        .put('/users/nonexistentUserID')
+        .put('/users/nonexistentUserId')
         .set('jwt', jwt)
         .send({
           first_name: 'UpdatedTest',
@@ -221,7 +221,7 @@ describe('User Router', () => {
     });
   });
 
-  describe('DELETE /users/:userID', () => {
+  describe('DELETE /users/:userId', () => {
     it('should handle non-existent user for deletion', async () => {
       const loginResponse = await request(app).post('/users/login').send({
         email: 'test.user2@test1.com',
@@ -232,7 +232,7 @@ describe('User Router', () => {
 
       // Make a request to the endpoint with the JWT in the headers
       const response = await request(app)
-        .delete('/users/nonexistentUserID')
+        .delete('/users/nonexistentUserId')
         .set('jwt', jwt);
 
       expect(response.status).toBe(403);
@@ -257,13 +257,13 @@ describe('User Router', () => {
 
       const jwt = await loginResponse.body.jwt;
 
-      // Get the ID of the other registered user
+      // Get the Id of the other registered user
       const otherUser = await User.findOne({email: 'test.user@test1.com'});
-      const otherUserID = otherUser._id.toString();
+      const otherUserId = otherUser._id.toString();
 
       // Make a request to the endpoint with the JWT in the headers
       const response = await request(app)
-        .delete(`/users/${otherUserID}`)
+        .delete(`/users/${otherUserId}`)
         .set('jwt', jwt);
 
       expect(response.status).toBe(403);
@@ -276,13 +276,13 @@ describe('User Router', () => {
 
       const jwt = await loginResponse.body.jwt;
 
-      // Get the ID of the registered user
+      // Get the Id of the registered user
       const user = await User.findOne({email: 'test.user2@test1.com'});
-      const userID = user._id.toString();
+      const userId = user._id.toString();
 
       // Make a request to the endpoint with the JWT in the headers
       const response = await request(app)
-        .delete(`/users/${userID}`)
+        .delete(`/users/${userId}`)
         .set('jwt', jwt);
 
       expect(response.status).toBe(200);
@@ -296,13 +296,13 @@ describe('User Router', () => {
 
       const jwt = await loginResponse.body.jwt;
 
-      // Get the ID of the registered user
+      // Get the Id of the registered user
       const user = await User.findOne({email: 'test.user@test1.com'});
-      const userID = user._id.toString();
+      const userId = user._id.toString();
 
       // Make a request to the endpoint with the JWT in the headers
       const response = await request(app)
-        .delete(`/users/${userID}`)
+        .delete(`/users/${userId}`)
         .set('jwt', jwt);
 
       expect(response.status).toBe(200);

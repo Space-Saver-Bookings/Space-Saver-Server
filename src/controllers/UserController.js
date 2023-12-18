@@ -60,14 +60,15 @@ router.post(
 router.post('/login', async (request, response, next) => {
   try {
     let targetUser = await User.findOne({email: request.body.email}).exec();
-
+    console.log(targetUser)
+    console.log(request.body.email)
     if (!targetUser) {
       return response.status(404).json({message: 'User not found.'});
     }
 
     if (await validateHashedData(request.body.password, targetUser.password)) {
       let encryptedUserJwt = await generateUserJWT({
-        userID: targetUser._id,
+        userId: targetUser._id,
         email: targetUser.email,
         password: targetUser.password,
       });
@@ -112,15 +113,15 @@ router.get(
 
 // Show a specific user
 router.get(
-  '/:userID',
+  '/:userId',
   verifyJwtHeader,
   filterUsersMiddleware,
   async (request, response, next) => {
     try {
-      const userIdParam = request.params.userID;
+      const userIdParam = request.params.userId;
       const filteredUsers = request.filteredUsers;
 
-      // Find the user with the specified ID in the filtered list
+      // Find the user with the specified Id in the filtered list
       const user = filteredUsers.find((user) => user._id.equals(userIdParam));
 
       if (!user) {
@@ -135,12 +136,12 @@ router.get(
 );
 
 // Update a user
-router.put('/:userID', handleErrors, async (request, response, next) => {
+router.put('/:userId', handleErrors, async (request, response, next) => {
   try {
-    const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+    const requestingUserId = await getUserIdFromJwt(request.headers.jwt);
 
     // Ensure that the user can only update their own account
-    if (requestingUserID !== request.params.userID) {
+    if (requestingUserId !== request.params.userId) {
       return response
         .status(403)
         .json({message: 'Unauthorised: You can only update your own account'});
@@ -157,7 +158,7 @@ router.put('/:userID', handleErrors, async (request, response, next) => {
     } = request.body;
 
     const userDetails = {
-      userID: request.params.userID,
+      userId: request.params.userId,
       updatedData: filterUndefinedProperties({
         first_name,
         last_name,
@@ -185,21 +186,21 @@ router.put('/:userID', handleErrors, async (request, response, next) => {
 });
 
 // Delete user account
-// Will only delete user if the requester is the userID
-router.delete('/:userID', verifyJwtHeader, async (request, response, next) => {
+// Will only delete user if the requester is the userId
+router.delete('/:userId', verifyJwtHeader, async (request, response, next) => {
   try {
-    const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
-    const targetUserID = request.params.userID;
+    const requestingUserId = await getUserIdFromJwt(request.headers.jwt);
+    const targetUserId = request.params.userId;
 
     // Check if the user making the request is the same as the user whose data is being deleted
-    if (requestingUserID !== targetUserID) {
+    if (requestingUserId !== targetUserId) {
       return response.status(403).json({
         message: 'Unauthorised. You can only delete your own account.',
       });
     }
 
     // Proceed with the delete operation
-    const deletedUser = await deleteUser(targetUserID);
+    const deletedUser = await deleteUser(targetUserId);
 
     if (!deletedUser) {
       return response.status(404).json({message: 'User not found'});

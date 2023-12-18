@@ -106,18 +106,18 @@ async function seedDatabase() {
     }
     const usersCreated = await User.insertMany(users);
 
-    // Update space data with created user IDs
+    // Update space data with created user Ids
     spaceData.admin_id = usersCreated[0]._id;
     spaceData.user_ids = usersCreated.map((user) => user._id);
     const spaceCreated = await Space.create(spaceData);
 
-    // Update rooms data with created space ID
+    // Update rooms data with created space Id
     roomsData.forEach((room) => {
       room.space_id = spaceCreated._id;
     });
     const roomsCreated = await Room.insertMany(roomsData);
 
-    // Update bookings data with created room and user IDs
+    // Update bookings data with created room and user Ids
     bookingsData.forEach((booking) => {
       booking.room_id = roomsCreated[0]._id;
       booking.primary_user_id = usersCreated[0]._id;

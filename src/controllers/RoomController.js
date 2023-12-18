@@ -30,11 +30,11 @@ router.get(
   filterRoomsMiddleware,
   async (request, response, next) => {
     try {
-      const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+      const requestingUserId = await getUserIdFromJwt(request.headers.jwt);
 
       let allRooms = null;
 
-      allRooms = await getAllRooms(requestingUserID);
+      allRooms = await getAllRooms(requestingUserId);
 
       response.json({
         roomCount: allRooms.length,
@@ -48,12 +48,12 @@ router.get(
 
 // Show a specific room
 router.get(
-  '/:roomID',
+  '/:roomId',
   verifyJwtHeader,
   filterRoomsMiddleware,
   async (request, response, next) => {
     try {
-      const room = await Room.findOne({_id: request.params.roomID}).populate(
+      const room = await Room.findOne({_id: request.params.roomId}).populate(
         'space_id'
       );
       if (!room) {
@@ -93,10 +93,10 @@ router.post('/', verifyJwtHeader, async (request, response, next) => {
   });
 });
 
-router.put('/:roomID', verifyJwtHeader, async (request, response) => {
+router.put('/:roomId', verifyJwtHeader, async (request, response) => {
   if (!(await isRequestingUserAdmin(request))) {
     return response.status(403).json({
-      error: `Unauthorised. User is not administrator for room: ${request.params.roomID}`,
+      error: `Unauthorised. User is not administrator for room: ${request.params.roomId}`,
     });
   }
   {
@@ -104,7 +104,7 @@ router.put('/:roomID', verifyJwtHeader, async (request, response) => {
       const {space_id, name, description, capacity} = request.body;
 
       const roomDetails = {
-        roomID: request.params.roomID,
+        roomId: request.params.roomId,
         updatedData: filterUndefinedProperties({
           space_id,
           name,
@@ -127,18 +127,18 @@ router.put('/:roomID', verifyJwtHeader, async (request, response) => {
   }
 });
 
-router.delete('/:roomID', verifyJwtHeader, async (request, response) => {
-  const targetRoomID = request.params.roomID;
+router.delete('/:roomId', verifyJwtHeader, async (request, response) => {
+  const targetRoomId = request.params.roomId;
   if (!(await isRequestingUserAdmin(request))) {
     return response.status(403).json({
-      error: `Unauthorised. User is not administrator for room: ${targetRoomID}`,
+      error: `Unauthorised. User is not administrator for room: ${targetRoomId}`,
     });
   }
   try {
     let room = null;
 
     try {
-      room = await Room.findOne({_id: targetRoomID});
+      room = await Room.findOne({_id: targetRoomId});
       if (!room) {
         return response.status(404).json({message: 'Room not found'});
       }
@@ -150,7 +150,7 @@ router.delete('/:roomID', verifyJwtHeader, async (request, response) => {
     }
 
     // Proceed with the delete operation
-    const deletedRoom = await deleteRoom(targetRoomID);
+    const deletedRoom = await deleteRoom(targetRoomId);
 
     return response.json({
       message: 'Room deleted successfully',

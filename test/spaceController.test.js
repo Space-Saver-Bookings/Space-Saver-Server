@@ -79,7 +79,7 @@ describe('Space Router', () => {
     });
   });
 
-  describe('GET /spaces/:spaceID', () => {
+  describe('GET /spaces/:spaceId', () => {
     test('should return details of a specific space', async () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Bob',
@@ -197,7 +197,7 @@ describe('Space Router', () => {
     });
   });
 
-  describe('PUT /spaces/:spaceID', () => {
+  describe('PUT /spaces/:spaceId', () => {
     test('should update details of a specific space', async () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Bob',
@@ -246,7 +246,7 @@ describe('Space Router', () => {
     });
   });
 
-  describe('DELETE /spaces/:spaceID', () => {
+  describe('DELETE /spaces/:spaceId', () => {
     test('should delete a specific space', async () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Bob',

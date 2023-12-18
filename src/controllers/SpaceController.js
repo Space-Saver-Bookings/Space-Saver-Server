@@ -39,7 +39,7 @@ router.get(
 );
 
 router.get(
-  '/:spaceID',
+  '/:spaceId',
   verifyJwtHeader,
   filterSpacesMiddleware,
   async (request, response, next) => {
@@ -47,7 +47,7 @@ router.get(
       const {filteredSpaces} = request;
 
       const space = filteredSpaces.find((space) =>
-        space._id.equals(request.params.spaceID)
+        space._id.equals(request.params.spaceId)
       );
 
       if (!space) {
@@ -64,15 +64,15 @@ router.get(
 // Create a new space
 router.post('/', verifyJwtHeader, async (request, response, next) => {
   try {
-    const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+    const requestingUserId = await getUserIdFromJwt(request.headers.jwt);
     const invite_code = await generateAccessCode();
 
-    const user_ids = [requestingUserID];
+    const user_ids = [requestingUserId];
 
     let newSpaceDoc = null;
 
     const spaceDetails = {
-      admin_id: requestingUserID,
+      admin_id: requestingUserId,
       user_ids: user_ids,
       name: request.body.name,
       description: request.body.description,
@@ -99,7 +99,7 @@ router.post(
   verifyJwtHeader,
   async (request, response, next) => {
     try {
-      const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+      const requestingUserId = await getUserIdFromJwt(request.headers.jwt);
       const inviteCode = request.params.invite_code;
 
       // Find the space with the given invite code
@@ -112,33 +112,35 @@ router.post(
       }
 
       // Check if the user is already in the space
-      if (space.user_ids.includes(requestingUserID)) {
+      if (space.user_ids.includes(requestingUserId)) {
         return response
           .status(400)
           .json({message: 'User is already part of the space', space: space});
       }
 
       // Add the user to the space
-      space.user_ids.push(requestingUserID);
+      space.user_ids.push(requestingUserId);
       await space.save();
 
-      response.status(200).json({message: 'User joined space successfully', space: space});
+      response
+        .status(200)
+        .json({message: 'User joined space successfully', space: space});
     } catch (error) {
       next(error);
     }
   }
 );
 
-router.put('/:spaceID', verifyJwtHeader, async (request, response, next) => {
+router.put('/:spaceId', verifyJwtHeader, async (request, response, next) => {
   try {
     const {admin_id, user_ids, name, description, capacity} = request.body;
 
     // Check if the requesting user is the admin of the space
-    const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
+    const requestingUserId = await getUserIdFromJwt(request.headers.jwt);
 
     // If the user is the admin, update the space
     const spaceDetails = {
-      spaceID: request.params.spaceID,
+      spaceId: request.params.spaceId,
       updatedData: filterUndefinedProperties({
         admin_id,
         user_ids,
@@ -147,7 +149,7 @@ router.put('/:spaceID', verifyJwtHeader, async (request, response, next) => {
         capacity,
       }),
     };
-    const updatedSpace = await updateSpace(spaceDetails, requestingUserID);
+    const updatedSpace = await updateSpace(spaceDetails, requestingUserId);
 
     if (!updatedSpace) {
       return response.status(404).json({message: 'Space not found'});
@@ -161,22 +163,22 @@ router.put('/:spaceID', verifyJwtHeader, async (request, response, next) => {
 
 /**
  * Route for deleting a space.
- * Will only delete the space if the requester is the spaceID.
+ * Will only delete the space if the requester is the spaceId.
  *
- * @name DELETE /spaces/:spaceID
+ * @name DELETE /spaces/:spaceId
  * @function
  * @memberof module:express.router
  * @param {Object} request - Express request object.
  * @param {Object} response - Express response object.
  * @returns {Object} JSON response indicating success or failure of the deletion.
  */
-router.delete('/:spaceID', verifyJwtHeader, async (request, response, next) => {
+router.delete('/:spaceId', verifyJwtHeader, async (request, response, next) => {
   try {
-    const requestingUserID = await getUserIdFromJwt(request.headers.jwt);
-    const targetSpaceID = request.params.spaceID;
+    const requestingUserId = await getUserIdFromJwt(request.headers.jwt);
+    const targetSpaceId = request.params.spaceId;
 
     // If the user is the admin, proceed with the delete operation
-    const deletedSpace = await deleteSpace(targetSpaceID, requestingUserID);
+    const deletedSpace = await deleteSpace(targetSpaceId, requestingUserId);
 
     if (!deletedSpace) {
       return response.status(404).json({message: 'Space not found'});

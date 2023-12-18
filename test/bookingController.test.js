@@ -12,7 +12,7 @@ const {
   generateAccessCode,
   createSpace,
 } = require('../src/functions/spaceFunctions');
-const {createRoom} = require('../src/functions/roomFunctions')
+const {createRoom} = require('../src/functions/roomFunctions');
 
 // Ensure the database is connected before all tests
 beforeAll(async () => {
@@ -68,7 +68,7 @@ describe('Booking Router', () => {
     });
   });
 
-  describe('GET /bookings/:bookingID', () => {
+  describe('GET /bookings/:bookingId', () => {
     test('should return details of a specific booking', async () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Ada',
@@ -129,7 +129,6 @@ describe('Booking Router', () => {
       expect(response.body.title).toBe('Test Booking');
     });
   });
-
 
   describe('GET /bookings/room', () => {
     test('should return bookings per room for the user', async () => {
@@ -307,7 +306,7 @@ describe('Booking Router', () => {
     });
   });
 
-  describe('PUT /bookings/:bookingID', () => {
+  describe('PUT /bookings/:bookingId', () => {
     test('should update details of a specific booking', async () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Ada',
@@ -373,7 +372,7 @@ describe('Booking Router', () => {
     });
   });
 
-  describe('DELETE /bookings/:bookingID', () => {
+  describe('DELETE /bookings/:bookingId', () => {
     test('should delete a specific booking', async () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Ada',

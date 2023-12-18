@@ -67,7 +67,7 @@ describe('Room Router', () => {
     });
   });
 
-  describe('GET /rooms/:roomID', () => {
+  describe('GET /rooms/:roomId', () => {
     test('should return details of a specific room', async () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'John',
@@ -135,7 +135,7 @@ describe('Room Router', () => {
         name: 'Test Space',
         description: 'Test space description',
         capacity: 10,
-        invite_code: code, 
+        invite_code: code,
       };
 
       const createdSpace = await createSpace(spaceDetails);
@@ -164,7 +164,7 @@ describe('Room Router', () => {
     });
   });
 
-  describe('PUT /rooms/:roomID', () => {
+  describe('PUT /rooms/:roomId', () => {
     test('should update details of a specific room', async () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'John',
@@ -219,7 +219,7 @@ describe('Room Router', () => {
     });
   });
 
-  describe('DELETE /rooms/:roomID', () => {
+  describe('DELETE /rooms/:roomId', () => {
     test('should delete a specific room', async () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'John',

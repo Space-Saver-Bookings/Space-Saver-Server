@@ -155,15 +155,51 @@ describe('Space Router', () => {
       const response = await request(app)
         .post(`/spaces/code/${invite_code}`)
         .set('jwt', jwt);
-      
+
+      // Assertions
+      expect(response.status).toBe(200);
+      expect(response.body.message).toBe('User joined space successfully');
+    });
+    test('should not allow duplicate users in space', async () => {
+      const registerResponse = await request(app).post('/users/register').send({
+        first_name: 'Bob',
+        last_name: 'Johnson',
+        email: 'test.user3@test2.com',
+        password: 'password123',
+        post_code: '54321',
+        country: 'NZ',
+        position: 'Developer',
+      });
+
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'test.user3@test2.com',
+        password: 'password123',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      const invite_code = await generateAccessCode();
+
+      const spaceDetails = {
+        admin_id: registerResponse.body.user._id,
+        user_ids: [],
+        name: 'Test Space',
+        description: 'Test space description',
+        capacity: 10,
+        invite_code: invite_code,
+      };
+
+      const createdSpace = await createSpace(spaceDetails);
+
+      // Make a request to the endpoint with the JWT in the headers
+      const response = await request(app)
+        .post(`/spaces/code/${invite_code}`)
+        .set('jwt', jwt);
       // Make a request to the endpoint with the JWT in the headers
       const duplicate_response = await request(app)
         .post(`/spaces/code/${invite_code}`)
         .set('jwt', jwt);
 
-      // Assertions
-      expect(response.status).toBe(200);
-      expect(response.body.message).toBe('User joined space successfully');
       expect(duplicate_response.status).toBe(409);
       expect(duplicate_response.body.message).toBe(
         'User is already part of the space'

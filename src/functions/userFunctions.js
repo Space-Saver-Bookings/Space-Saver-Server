@@ -251,11 +251,16 @@ async function createUser(userDetails) {
  * @returns {Object|null} The raw MongoDB database document representing the updated user or null if not found.
  */
 async function updateUser(userDetails) {
+  // Hash the password if it's provided in the userDetails
+  if (userDetails.updatedData.password) {
+    userDetails.updatedData.password = await hashString(userDetails.updatedData.password);
+  }
+
   // Find user, update it, return the updated user data.
   return await User.findByIdAndUpdate(
     userDetails.userId,
     userDetails.updatedData,
-    {returnDocument: 'after'}
+    { returnDocument: 'after' }
   ).exec();
 }
 

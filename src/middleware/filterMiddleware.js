@@ -51,7 +51,7 @@ const filterUsersMiddleware = async (request, response, next) => {
           )
           .map((space) => space._id);
 
-        // Omitting __v and password fields from the user object
+        // Remove __v and password fields from the user object
         const {__v, password, ...userWithoutVAndPassword} = user.toObject();
 
         return {...userWithoutVAndPassword, space_ids: spaceIdsForUser};
@@ -60,14 +60,14 @@ const filterUsersMiddleware = async (request, response, next) => {
       // Append details of the requesting user to the filtered user list
       const usersWithRequestingUser = [...usersWithSpaceId, requestingUser];
 
-      // Modify the request object or response object based on your filtering criteria
+      // Modify the request object or response object based on filtering criteria
       request.filteredUsers = usersWithRequestingUser;
     } else {
       // If the requesting user is already in the list, use the original filteredUsers array
       request.filteredUsers = filteredUsers;
     }
 
-    next(); // Move to the next middleware or route handler
+    next();
   } catch (error) {
     handleErrors(error, request, response, next);
   }
@@ -91,10 +91,9 @@ const filterSpacesMiddleware = async (request, response, next) => {
       return spaceWithoutV;
     });
 
-    // Modify the request object or response object based on your filtering criteria
     request.filteredSpaces = filteredSpaces;
 
-    next(); // Move to the next middleware or route handler
+    next();
   } catch (error) {
     handleErrors(error, request, response, next);
   }

@@ -304,6 +304,68 @@ describe('Booking Router', () => {
       // Assertions
       expect(response.status).toBe(201);
     });
+    test('should not allow start date after end date', async () => {
+      const registerResponse = await request(app).post('/users/register').send({
+        first_name: 'Ada',
+        last_name: 'Lovelace',
+        email: 'test.user5@test4.com',
+        password: 'password123',
+        post_code: '54321',
+        country: 'NZ',
+        position: 'Developer',
+      });
+
+      const spaceDetails = {
+        admin_id: registerResponse.body.user._id,
+        user_ids: [],
+        name: 'Test Space',
+        description: 'Test space description',
+        capacity: 10,
+        invite_code: await generateAccessCode(),
+      };
+
+      const createdSpace = await createSpace(spaceDetails);
+
+      const roomDetails = {
+        space_id: createdSpace._id.toString(),
+        name: 'Testing room creation',
+        description: 'This is a new room',
+        capacity: 100,
+      };
+
+      const createdRoom = await createRoom(roomDetails);
+
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'test.user5@test4.com',
+        password: 'password123',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      const now = new Date();
+      const oneHourAgo = new Date(now);
+      oneHourAgo.setHours(now.getHours() - 1);
+
+      const bookingDetails = {
+        room_id: createdRoom._id.toString(),
+        title: 'Test Booking',
+        description: 'This is a test booking',
+        start_time: new Date(),
+        end_time: oneHourAgo,
+      };
+
+      // Make a request to the endpoint with the JWT in the headers
+      const response = await request(app)
+        .post(`/bookings`)
+        .set('jwt', jwt)
+        .send(bookingDetails);
+
+      // Assertions
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe(
+        'Start date cannot be after end date.'
+      );
+    });
   });
 
   describe('PUT /bookings/:bookingId', () => {

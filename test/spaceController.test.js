@@ -120,7 +120,7 @@ describe('Space Router', () => {
   });
 
   describe('POST /spaces/code/:invite_code', () => {
-    test('should add user to space with the given invite code', async () => {
+    test('should add user to space with the given invite code and not allow duplicate', async () => {
       const registerResponse = await request(app).post('/users/register').send({
         first_name: 'Bob',
         last_name: 'Johnson',
@@ -155,10 +155,19 @@ describe('Space Router', () => {
       const response = await request(app)
         .post(`/spaces/code/${invite_code}`)
         .set('jwt', jwt);
+      
+      // Make a request to the endpoint with the JWT in the headers
+      const duplicate_response = await request(app)
+        .post(`/spaces/code/${invite_code}`)
+        .set('jwt', jwt);
 
       // Assertions
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('User joined space successfully');
+      expect(duplicate_response.status).toBe(409);
+      expect(duplicate_response.body.message).toBe(
+        'User is already part of the space'
+      );
     });
   });
 

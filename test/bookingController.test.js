@@ -317,6 +317,15 @@ describe('Booking Router', () => {
         country: 'NZ',
         position: 'Developer',
       });
+      const registerResponse2 = await request(app).post('/users/register').send({
+        first_name: 'Ada',
+        last_name: 'Lovelace',
+        email: 'test.user5@test4.com',
+        password: 'password123',
+        post_code: '54321',
+        country: 'NZ',
+        position: 'Developer',
+      });
 
       const spaceDetails = {
         admin_id: registerResponse.body.user._id,
@@ -357,8 +366,10 @@ describe('Booking Router', () => {
 
       const jwt = await loginResponse.body.jwt;
       const updatedBookingDetails = {
+        primary_user_id: registerResponse.body.user._id,
         title: 'Updated - Test Booking',
         description: 'Updated - This is a test booking',
+        end_time: new Date(),
       };
       // Make a request to the endpoint with the JWT in the headers
       const response = await request(app)

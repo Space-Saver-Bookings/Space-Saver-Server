@@ -37,7 +37,7 @@ const handleErrors = (error, request, response, next) => {
 
   // Handle and respond to the client appropriately
   if (response.headersSent) {
-    return next(error); // Pass the error to the next middleware if headers are already sent
+    return next(error);
   }
 
   response.status(500).json({

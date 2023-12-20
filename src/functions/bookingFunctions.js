@@ -290,7 +290,7 @@ function numberOfRoomsInUse(bookedTimeSlots, date) {
       const endTime = new Date(booking.end_time);
       return startTime <= date && endTime >= date;
     })
-    .map((booking) => booking.room_id.toString()) // Assuming room_id is an ObjectId
+    .map((booking) => booking.room_id.toString())
     .filter((value, index, self) => self.indexOf(value) === index);
 
   return roomsInUse.length;
@@ -309,7 +309,7 @@ function numberOfUsersInRooms(bookedTimeSlots, date) {
       const startTime = new Date(booking.start_time);
       const endTime = new Date(booking.end_time);
       if (startTime <= date && endTime >= date) {
-        acc.primaryUsers.add(booking.primary_user_id.toString()); // Assuming primary_user_id is an ObjectId
+        acc.primaryUsers.add(booking.primary_user_id.toString());
         booking.invited_user_ids.forEach((userId) =>
           acc.invitedUsers.add(userId.toString())
         );

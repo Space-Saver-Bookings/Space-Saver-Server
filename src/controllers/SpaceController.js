@@ -85,6 +85,9 @@ router.post('/', verifyJwtHeader, async (request, response, next) => {
       response.json({error: error.reason});
     }
 
+    // Populate admin_id and user_ids fields before sending the response
+    await Space.populate(newSpaceDoc, {path: 'admin_id user_ids'});
+
     response.status(201).json({
       space: newSpaceDoc,
     });
@@ -111,10 +114,15 @@ router.post(
           .json({message: 'Space not found with the given invite code'});
       }
 
-      // Check if the user is already in the space
-      if (space.user_ids.includes(requestingUserId)) {
+      // Check if the user is already part of the space by searching user_ids
+      const userAlreadyInSpace = await Space.exists({
+        _id: space._id,
+        user_ids: requestingUserId,
+      });
+
+      if (userAlreadyInSpace) {
         return response
-          .status(400)
+          .status(409)
           .json({message: 'User is already part of the space', space: space});
       }
 

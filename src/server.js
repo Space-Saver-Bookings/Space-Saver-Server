@@ -61,6 +61,14 @@ app.use('/rooms', roomController);
 const bookingController = require('./controllers/BookingController');
 app.use('/bookings', bookingController);
 
+// Welcome route
+app.get('/', (request, response) => {
+  response.status(418).json({
+    message: 'Welcome to the SpaceSaver API!',
+    attemptedPath: request.path,
+  });
+});
+
 // handle all other routes --> leave at bottom of page
 app.get('*', (request, response) => {
   response.status(404).json({

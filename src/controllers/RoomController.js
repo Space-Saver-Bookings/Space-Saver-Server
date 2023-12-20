@@ -87,6 +87,8 @@ router.post('/', verifyJwtHeader, async (request, response, next) => {
   } catch (error) {
     next(error);
   }
+  // Populate space_id fields before sending the response
+  await Room.populate(newRoomDoc, {path: 'space_id'});
 
   response.status(201).json({
     room: newRoomDoc,

@@ -27,22 +27,27 @@ async function getOneBooking(bookingId) {
 
 /**
  * Creates a new booking if there are no overlapping bookings for the specified room and time range.
- * Throws an error if an overlap is detected.
+ * Throws an error if an overlap is detected or if start_date is after end_date.
  *
  * @param {Object} bookingDetails - Details of the new booking.
  * @returns {Object} The raw MongoDB database document representing the created booking.
- * @throws {Error} An error with a message indicating the overlapping booking if detected.
+ * @throws {Error} An error with a message indicating the overlapping booking or invalid date range if detected.
  */
 async function createBooking(bookingDetails) {
-  const {room_id, start_time, end_time} = bookingDetails;
+  const { room_id, start_time, end_time } = bookingDetails;
+
+  // Check if start_date is after end_date
+  if (new Date(start_time) > new Date(end_time)) {
+    throw new Error('Start date cannot be after end date.');
+  }
 
   // Check if there is an overlapping booking for the specified room and time range
   const overlappingBooking = await Booking.findOne({
     room_id: room_id,
     $or: [
-      {start_time: {$lt: end_time}, end_time: {$gt: start_time}}, // New booking starts before existing ends
-      {start_time: {$lt: end_time}, end_time: {$gt: end_time}}, // New booking overlaps with existing booking
-      {start_time: {$lt: start_time}, end_time: {$gt: start_time}},
+      { start_time: { $lt: end_time }, end_time: { $gt: start_time } }, // New booking starts before existing ends
+      { start_time: { $lt: end_time }, end_time: { $gt: end_time } }, // New booking overlaps with existing booking
+      { start_time: { $lt: start_time }, end_time: { $gt: start_time } },
     ],
   });
 
@@ -70,15 +75,39 @@ async function createBooking(bookingDetails) {
  *
  * @param {Object} bookingDetails - Details for updating the booking.
  * @returns {Object|null} The raw MongoDB database document representing the updated booking or null if not found.
+ * @throws {Error} An error with a message indicating an invalid date range if detected.
  */
 async function updateBooking(bookingDetails) {
-  // Find booking, update it, return the updated booking data.
-  return await Booking.findByIdAndUpdate(
-    bookingDetails.bookingId,
-    bookingDetails.updatedData,
-    {new: true}
-  ).exec();
+  try {
+    const existingBooking = await Booking.findById(bookingDetails.bookingId).exec();
+
+    if (!existingBooking) {
+      throw new Error('Booking not found.');
+    }
+
+    const updatedData = bookingDetails.updatedData || {};
+    const { start_time, end_time } = updatedData;
+
+    // Check if start_date is after end_date
+    if (
+      start_time &&
+      end_time &&
+      new Date(start_time) > new Date(end_time)
+    ) {
+      throw new Error('Start date cannot be after end date.');
+    }
+
+    // Find booking, update it, return the updated booking data.
+    return await Booking.findByIdAndUpdate(
+      bookingDetails.bookingId,
+      updatedData,
+      { new: true }
+    ).exec();
+  } catch (error) {
+    throw new Error(`Error updating booking: ${error.message}`);
+  }
 }
+
 
 /**
  * Deletes an existing booking.

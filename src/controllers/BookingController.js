@@ -24,6 +24,8 @@ const {
 
 const {getUserIdFromJwt} = require('../functions/userFunctions');
 const {filterBookingsMiddleware} = require('../middleware/filterMiddleware');
+const { Booking } = require('../models/BookingModel');
+const { Room } = require('../models/RoomModel');
 
 router.get(
   '/',
@@ -263,6 +265,15 @@ router.post('/', verifyJwtHeader, async (request, response, next) => {
         };
 
         newBookingDoc = await createBooking(bookingDetails);
+
+        // Populate user ids fields before sending the response
+        await Room.populate(newBookingDoc, {
+          path: 'room_id',
+        });
+        // Populate user ids fields before sending the response
+        await Booking.populate(newBookingDoc, {
+          path: 'primary_user_id invited_user_ids',
+        });
 
         response.status(201).json({
           booking: newBookingDoc,

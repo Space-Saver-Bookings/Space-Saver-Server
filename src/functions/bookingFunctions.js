@@ -75,7 +75,7 @@ async function createBooking(bookingDetails) {
  *
  * @param {Object} bookingDetails - Details for updating the booking.
  * @returns {Object|null} The raw MongoDB database document representing the updated booking or null if not found.
- * @throws {Error} An error with a message indicating an invalid date range if detected.
+ * @throws {Error} An error with a message indicating an invalid date range or overlapping booking if detected.
  */
 async function updateBooking(bookingDetails) {
   try {
@@ -89,12 +89,29 @@ async function updateBooking(bookingDetails) {
     const { start_time, end_time } = updatedData;
 
     // Check if start_date is after end_date
-    if (
-      start_time &&
-      end_time &&
-      new Date(start_time) > new Date(end_time)
-    ) {
+    if (start_time && end_time && new Date(start_time) > new Date(end_time)) {
       throw new Error('Start date cannot be after end date.');
+    }
+
+    // Check for overlapping bookings only if start_time or end_time is updated
+    if (start_time || end_time) {
+      const { room_id } = existingBooking;
+
+      // Check if there is an overlapping booking for the specified room and time range
+      const overlappingBooking = await Booking.findOne({
+        _id: { $ne: bookingDetails.bookingId }, // Exclude the current booking from the check
+        room_id: room_id,
+        $or: [
+          { start_time: { $lt: end_time }, end_time: { $gt: start_time } }, // New booking starts before existing ends
+          { start_time: { $lt: end_time }, end_time: { $gt: end_time } }, // New booking overlaps with existing booking
+          { start_time: { $lt: start_time }, end_time: { $gt: start_time } },
+        ],
+      });
+
+      if (overlappingBooking) {
+        const errorMessage = `Overlapping booking detected for room ${room_id} between ${start_time} and ${end_time}.`;
+        throw new Error(errorMessage);
+      }
     }
 
     // Find booking, update it, return the updated booking data.
@@ -107,6 +124,7 @@ async function updateBooking(bookingDetails) {
     throw new Error(`Error updating booking: ${error.message}`);
   }
 }
+
 
 
 /**

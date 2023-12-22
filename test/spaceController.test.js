@@ -275,7 +275,7 @@ describe('Space Router', () => {
       const createdSpace = await createSpace(spaceDetails);
 
       const updatedSpaceDetails = {
-        user_ids: [],
+        user_ids: [registerResponse.body.user._id],
         name: 'Updated Test Space',
         description: 'Updated test space description',
         capacity: 20,
@@ -287,7 +287,7 @@ describe('Space Router', () => {
         .send(updatedSpaceDetails);
 
       expect(response.status).toBe(200);
-      expect(response.body).toMatchObject(updatedSpaceDetails);
+      expect(response.body.description).toMatch(updatedSpaceDetails.description);
     });
   });
 

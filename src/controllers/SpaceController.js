@@ -146,6 +146,21 @@ router.put('/:spaceId', verifyJwtHeader, async (request, response, next) => {
     // Check if the requesting user is the admin of the space
     const requestingUserId = await getUserIdFromJwt(request.headers.jwt);
 
+    // Fetch the current state of the space
+    const currentSpace = await getOneSpace(request.params.spaceId);
+
+    if (!currentSpace) {
+      return response.status(404).json({message: 'Space not found'});
+    }
+
+    // Check if the requesting user is the admin of the space
+    if (!currentSpace.admin_id.equals(requestingUserId)) {
+      return response.status(403).json({
+        message:
+          'Unauthorised. You do not have permission to edit the space.',
+      });
+    }
+
     // If the user is the admin, update the space
     const spaceDetails = {
       spaceId: request.params.spaceId,
@@ -157,6 +172,7 @@ router.put('/:spaceId', verifyJwtHeader, async (request, response, next) => {
         capacity,
       }),
     };
+
     const updatedSpace = await updateSpace(spaceDetails, requestingUserId);
 
     if (!updatedSpace) {

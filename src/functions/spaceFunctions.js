@@ -53,23 +53,44 @@ async function createSpace(spaceDetails) {
  * @returns {Object|null} The raw MongoDB database document representing the updated space or null if not found or permission denied.
  */
 async function updateSpace(spaceDetails, requestingUserId) {
-  // Find space, update it, return the updated space data.
-  const space = await Space.findOne({_id: spaceDetails.spaceId});
+  try {
+    // Find space and check if it exists
+    const space = await Space.findOne({ _id: spaceDetails.spaceId });
 
-  // Check if the requesting user is the admin of the space
-  if (!space) {
-    return null; // Space not found
+    if (!space) {
+      return null; // Space not found
+    }
+
+    // Check if the requesting user is the admin of the space
+    if (!space.admin_id.equals(requestingUserId)) {
+      return null; // Permission denied
+    }
+
+    // Check if the admin is trying to remove themselves from the user_ids array
+    if (
+      spaceDetails.updatedData.user_ids &&
+      !spaceDetails.updatedData.user_ids.includes(requestingUserId)
+    ) {
+      throw new Error('Cannot remove the admin from the space');
+    }
+
+    // Check if the admin is updated and not already in user_ids, add them to the array
+    if (
+      spaceDetails.updatedData.admin_id &&
+      !spaceDetails.updatedData.user_ids.includes(spaceDetails.updatedData.admin_id.toString())
+    ) {
+      spaceDetails.updatedData.user_ids.push(spaceDetails.updatedData.admin_id.toString());
+    }
+
+    // Update space and return the updated space data
+    return await Space.findByIdAndUpdate(
+      spaceDetails.spaceId,
+      spaceDetails.updatedData,
+      { new: true }
+    ).exec();
+  } catch (error) {
+    throw new Error(`Error updating space: ${error.message}`);
   }
-
-  if (!space.admin_id.equals(requestingUserId)) {
-    return null; // Permission denied
-  }
-
-  return await Space.findByIdAndUpdate(
-    spaceDetails.spaceId,
-    spaceDetails.updatedData,
-    {new: true}
-  ).exec();
 }
 
 /**

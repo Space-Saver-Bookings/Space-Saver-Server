@@ -13,6 +13,9 @@ const {generateAccessCode} = require('./functions/spaceFunctions');
 const dotenv = require('dotenv');
 dotenv.config();
 
+
+const currentDateTime = new Date();
+
 // Function to seed the database
 async function seedDatabase() {
   try {
@@ -95,8 +98,35 @@ async function seedDatabase() {
         invited_user_ids: [],
         title: 'Meeting 1',
         description: 'This is Meeting 1',
-        start_time: new Date('2023-01-01T08:00:00Z'),
-        end_time: new Date('2023-01-01T09:00:00Z'),
+        start_time: new Date(currentDateTime),
+        end_time: new Date(currentDateTime.getTime() + 60 * 60 * 1000), // 1 hour later
+      },
+      {
+        room_id: null, // Placeholder
+        primary_user_id: null, // Placeholder
+        invited_user_ids: [],
+        title: 'Meeting 2',
+        description: 'This is Meeting 2',
+        start_time: new Date(currentDateTime.getTime() + 2 * 60 * 60 * 1000), // 2 hours later
+        end_time: new Date(currentDateTime.getTime() + 3 * 60 * 60 * 1000), // 3 hours later
+      },
+      {
+        room_id: null, // Placeholder
+        primary_user_id: null, // Placeholder
+        invited_user_ids: [],
+        title: 'Meeting 3',
+        description: 'This is Meeting 3',
+        start_time: new Date(currentDateTime.getTime() + 2 * 60 * 60 * 1000), // 3 hours later
+        end_time: new Date(currentDateTime.getTime() + 4 * 60 * 60 * 1000), // 4 hour later
+      },
+      {
+        room_id: null, // Placeholder
+        primary_user_id: null, // Placeholder
+        invited_user_ids: [],
+        title: 'Meeting 4',
+        description: 'This is Meeting 4',
+        start_time: new Date(currentDateTime.getTime() + 5 * 60 * 60 * 1000), // 5 hours later
+        end_time: new Date(currentDateTime.getTime() + 6 * 60 * 60 * 1000), // 6 hours later
       },
     ];
 
@@ -118,9 +148,12 @@ async function seedDatabase() {
     const roomsCreated = await Room.insertMany(roomsData);
 
     // Update bookings data with created room and user Ids
-    bookingsData.forEach((booking) => {
-      booking.room_id = roomsCreated[0]._id;
-      booking.primary_user_id = usersCreated[0]._id;
+    bookingsData.forEach((booking, index) => {
+      const userIndex = index % usersCreated.length; // Calculate the index of the users
+      const roomIndex = index % roomsCreated.length; // Calculate the index of the rooms
+
+      booking.room_id = roomsCreated[roomIndex]._id;
+      booking.primary_user_id = usersCreated[userIndex]._id;
     });
     const bookingsCreated = await Booking.insertMany(bookingsData);
 

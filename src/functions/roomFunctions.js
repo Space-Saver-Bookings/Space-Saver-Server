@@ -113,7 +113,6 @@ async function isRequestingUserAdmin(request) {
       return false;
     }
   } catch (error) {
-    console.error(error);
     return false;
   }
 }

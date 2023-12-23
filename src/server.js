@@ -43,8 +43,7 @@ databaseConnector(databaseURL)
     console.log(`Database connected successfully! \n Port: ${PORT}`);
   })
   .catch((error) => {
-    console.log(`
-    ERROR occurred connecting to the database! It was:\n
+    console.log(`ERROR occurred connecting to the database! It was:\n
     ${JSON.stringify(error)}
     `);
   });

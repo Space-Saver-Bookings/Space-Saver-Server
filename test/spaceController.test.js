@@ -29,7 +29,7 @@ beforeEach(async () => {
   await new Promise((resolve) => setTimeout(resolve, delayDuration));
 
   // Delete user before each test
-  const emailsToDelete = ['test.user3@test2.com'];
+  const emailsToDelete = ['test.user3@test2.com', 'test.403user3@test2.com'];
   for (email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
@@ -117,6 +117,31 @@ describe('Space Router', () => {
 
       expect(response.status).toBe(200);
     });
+    test('should return a 404 status and indicate that the space was not found', async () => {
+      const registerResponse = await request(app).post('/users/register').send({
+        first_name: 'Bob',
+        last_name: 'Johnson',
+        email: 'test.user3@test2.com',
+        password: 'password123',
+        post_code: '54321',
+        country: 'NZ',
+        position: 'Developer',
+      });
+
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'test.user3@test2.com',
+        password: 'password123',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      const response = await request(app)
+        .get('/spaces/nonexistent-space-id')
+        .set('jwt', jwt);
+
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe('Space not found');
+    });
   });
 
   describe('POST /spaces/code/:invite_code', () => {
@@ -159,6 +184,47 @@ describe('Space Router', () => {
       // Assertions
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('User joined space successfully');
+    });
+    test('should handle space not found', async () => {
+      const registerResponse = await request(app).post('/users/register').send({
+        first_name: 'Bob',
+        last_name: 'Johnson',
+        email: 'test.user3@test2.com',
+        password: 'password123',
+        post_code: '54321',
+        country: 'NZ',
+        position: 'Developer',
+      });
+
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'test.user3@test2.com',
+        password: 'password123',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      const invite_code = await generateAccessCode();
+
+      const spaceDetails = {
+        admin_id: registerResponse.body.user._id,
+        user_ids: [],
+        name: 'Test Space',
+        description: 'Test space description',
+        capacity: 10,
+        invite_code: invite_code,
+      };
+
+      const createdSpace = await createSpace(spaceDetails);
+
+      // Make a request to the endpoint with the JWT in the headers
+      const response = await request(app)
+        .post(`/spaces/code/${invite_code}-fake-code`)
+        .set('jwt', jwt);
+
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe(
+        'Space not found with the given invite code'
+      );
     });
     test('should not allow duplicate users in space', async () => {
       const registerResponse = await request(app).post('/users/register').send({
@@ -287,7 +353,95 @@ describe('Space Router', () => {
         .send(updatedSpaceDetails);
 
       expect(response.status).toBe(200);
-      expect(response.body.description).toMatch(updatedSpaceDetails.description);
+      expect(response.body.description).toMatch(
+        updatedSpaceDetails.description
+      );
+    });
+    test('should handle non-existent space', async () => {
+      const registerResponse = await request(app).post('/users/register').send({
+        first_name: 'Bob',
+        last_name: 'Johnson',
+        email: 'test.user3@test2.com',
+        password: 'password123',
+        post_code: '54321',
+        country: 'NZ',
+        position: 'Developer',
+      });
+
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'test.user3@test2.com',
+        password: 'password123',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      const response = await request(app)
+        .put('/spaces/123412341234123412341234')
+        .set('jwt', jwt)
+        .send({
+          user_ids: ['validUserId'],
+          name: 'Updated Test Space',
+          description: 'Updated test space description',
+          capacity: 20,
+        });
+
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe('Space not found');
+    });
+    test('should handle non-authorised space update', async () => {
+      const spaceOwnerResponse = await request(app).post('/users/register').send({
+        first_name: 'Bob',
+        last_name: 'Johnson',
+        email: 'test.user3@test2.com',
+        password: 'password123',
+        post_code: '54321',
+        country: 'NZ',
+        position: 'Developer',
+      });
+      const registerResponse = await request(app).post('/users/register').send({
+        first_name: 'Bob',
+        last_name: 'Johnson',
+        email: 'test.403user3@test2.com',
+        password: 'password123',
+        post_code: '54321',
+        country: 'NZ',
+        position: 'Developer',
+      });
+
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'test.403user3@test2.com',
+        password: 'password123',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      const invite_code = await generateAccessCode();
+
+      const spaceDetails = {
+        admin_id: spaceOwnerResponse.body.user._id,
+        user_ids: [],
+        name: 'Test Space',
+        description: 'Test space description',
+        capacity: 10,
+        invite_code: invite_code,
+      };
+
+      const createdSpace = await createSpace(spaceDetails);
+
+      const response = await request(app)
+        .put(`/spaces/${createdSpace._id}`)
+        .set('jwt', jwt)
+        .send({
+          user_ids: ['validUserId'],
+          name: 'Updated Test Space',
+          description: 'Updated test space description',
+          capacity: 20,
+        });
+
+      expect(response.status).toBe(403);
+      expect(response.body.message).toBe(
+        'Unauthorised. You do not have permission to edit the space.'
+      );
     });
   });
 
@@ -330,6 +484,33 @@ describe('Space Router', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         message: 'Space deleted successfully',
+      });
+    });
+    test('should handle delete of non existing space', async () => {
+      const registerResponse = await request(app).post('/users/register').send({
+        first_name: 'Bob',
+        last_name: 'Johnson',
+        email: 'test.user3@test2.com',
+        password: 'password123',
+        post_code: '54321',
+        country: 'NZ',
+        position: 'Developer',
+      });
+
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'test.user3@test2.com',
+        password: 'password123',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      const response = await request(app)
+        .delete(`/spaces/123412341234123412341234`)
+        .set('jwt', jwt);
+
+      expect(response.status).toBe(404);
+      expect(response.body).toMatchObject({
+        message: 'Space not found',
       });
     });
   });

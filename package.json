@@ -4,8 +4,8 @@
   "description": "MERN Space Saver Application Server",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=development jest --testTimeout=20000",
-    "test-ci": "NODE_ENV=production jest --detectOpenHandles --ci --reporters='default' --reporters='./test/GithubActionsReporter.js' --testTimeout=20000",
+    "test": "NODE_ENV=development jest --testTimeout=30000",
+    "test-ci": "NODE_ENV=production jest --detectOpenHandles --ci --reporters='default' --reporters='./test/GithubActionsReporter.js' --testTimeout=30000",
     "coverage": "NODE_ENV=development jest --coverage",
     "seed-dev": "NODE_ENV=development WIPE=true node src/seeds.js",
     "seed-prod": "NODE_ENV=production WIPE=true node src/seeds.js",

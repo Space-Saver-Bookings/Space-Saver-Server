@@ -23,4 +23,12 @@ describe('Server API Routes', () => {
       expect(response.body.message).toEqual('No route with that path found!');
     });
   });
+
+  describe('GET /wrong-url', () => {
+    it('should return status 404 and a not found message', async () => {
+      const response = await request(app).get('/wrong-url');
+      expect(response.statusCode).toEqual(404);
+      expect(response.body.message).toEqual('No route with that path found!');
+    });
+  });
 });

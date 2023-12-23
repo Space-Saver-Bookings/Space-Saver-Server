@@ -57,10 +57,6 @@ async function updateSpace(spaceDetails, requestingUserId) {
     // Find space and check if it exists
     const space = await Space.findOne({ _id: spaceDetails.spaceId });
 
-    if (!space) {
-      return null; // Space not found
-    }
-
     // Check if the requesting user is the admin of the space
     if (!space.admin_id.equals(requestingUserId)) {
       return null; // Permission denied

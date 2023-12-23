@@ -10,7 +10,6 @@ const router = express.Router();
 const {
   encryptString,
   decryptString,
-  decryptObject,
   validateHashedData,
   generateJWT,
   generateUserJWT,
@@ -170,15 +169,8 @@ router.put('/:userId', handleErrors, async (request, response, next) => {
 
     const updatedUser = await updateUser(userDetails);
 
-    if (!updatedUser) {
-      return response.status(404).json({message: 'User not found'});
-    }
-
     return response.json(updatedUser);
   } catch (error) {
-    if (error.path === '_id') {
-      return response.status(404).json({message: 'User not found'});
-    }
     next(error);
   }
 });
@@ -200,15 +192,8 @@ router.delete('/:userId', verifyJwtHeader, async (request, response, next) => {
     // Proceed with the delete operation
     const deletedUser = await deleteUser(targetUserId);
 
-    if (!deletedUser) {
-      return response.status(404).json({message: 'User not found'});
-    }
-
     return response.json({message: 'User deleted successfully'});
   } catch (error) {
-    if (error.path === '_id') {
-      return response.status(404).json({message: 'User not found'});
-    }
     next(error);
   }
 });

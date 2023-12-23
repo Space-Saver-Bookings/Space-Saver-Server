@@ -34,16 +34,6 @@ function decryptString(data) {
   return decipher.update(data, 'hex', 'utf8') + decipher.final('utf8');
 }
 
-/**
- * Decrypts an encrypted JSON object string and converts it into a regular JavaScript object.
- *
- * @param {string} data - The encrypted JSON object string to be decrypted.
- * @returns {Object} The decrypted JavaScript object.
- */
-function decryptObject(data) {
-  return JSON.parse(decryptString(data));
-}
-
 // --------------------------------------
 // ----- JWT functionality
 const jwt = require('jsonwebtoken');
@@ -124,20 +114,15 @@ async function verifyUserJWT(userJWT) {
     console.error(error);
 
     if (error.message === 'Token expired') {
-      // Handle token expiration response
-      response.status(401).json({
-        error: 'Token expired',
-        message: 'The provided token has expired. Please log in again to obtain a new token.'
-      });
+      // Throw an error with a specific message for token expiration
+      throw new Error('TokenExpired');
     } else {
-      // Handle other verification errors
-      response.status(401).json({
-        error: 'Invalid JWT',
-        message: 'The provided token is invalid.'
-      });
+      // Throw a generic error for other verification errors
+      throw new Error('InvalidToken');
     }
   }
 }
+
 
 /**
  * Returns the user Id extracted from a user JWT.
@@ -253,14 +238,16 @@ async function createUser(userDetails) {
 async function updateUser(userDetails) {
   // Hash the password if it's provided in the userDetails
   if (userDetails.updatedData.password) {
-    userDetails.updatedData.password = await hashString(userDetails.updatedData.password);
+    userDetails.updatedData.password = await hashString(
+      userDetails.updatedData.password
+    );
   }
 
   // Find user, update it, return the updated user data.
   return await User.findByIdAndUpdate(
     userDetails.userId,
     userDetails.updatedData,
-    { returnDocument: 'after' }
+    {returnDocument: 'after'}
   ).exec();
 }
 
@@ -310,7 +297,6 @@ function filterUndefinedProperties(obj) {
 module.exports = {
   encryptString,
   decryptString,
-  decryptObject,
   hashString,
   validateHashedData,
   generateJWT,

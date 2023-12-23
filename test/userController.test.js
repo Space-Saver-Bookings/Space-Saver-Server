@@ -18,7 +18,7 @@ beforeAll(async () => {
   for (email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
-}, 10000);
+});
 
 // disconnect after tests
 afterAll(async () => {
@@ -30,7 +30,7 @@ beforeEach(async () => {
 
   // Use setTimeout for the delay
   await new Promise((resolve) => setTimeout(resolve, delayDuration));
-}, 10000);
+});
 
 describe('User Router', () => {
   describe('POST /users/register', () => {

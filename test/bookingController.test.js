@@ -34,7 +34,7 @@ beforeEach(async () => {
   for (const email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
-}, 10000);
+});
 
 describe('Booking Router', () => {
   describe('GET /bookings', () => {

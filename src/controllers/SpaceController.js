@@ -79,12 +79,8 @@ router.post('/', verifyJwtHeader, async (request, response, next) => {
       invite_code: invite_code,
       capacity: request.body.capacity,
     };
-    try {
-      newSpaceDoc = await createSpace(spaceDetails);
-    } catch (error) {
-      response.json({error: error.reason});
-    }
-
+    newSpaceDoc = await createSpace(spaceDetails);
+    
     // Populate admin_id and user_ids fields before sending the response
     await Space.populate(newSpaceDoc, {path: 'admin_id user_ids'});
 
@@ -156,8 +152,7 @@ router.put('/:spaceId', verifyJwtHeader, async (request, response, next) => {
     // Check if the requesting user is the admin of the space
     if (!currentSpace.admin_id.equals(requestingUserId)) {
       return response.status(403).json({
-        message:
-          'Unauthorised. You do not have permission to edit the space.',
+        message: 'Unauthorised. You do not have permission to edit the space.',
       });
     }
 

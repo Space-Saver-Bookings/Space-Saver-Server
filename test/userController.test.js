@@ -1,4 +1,6 @@
 const request = require('supertest');
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const {app} = require('../src/server');
 
 const {User} = require('../src/models/UserModel');
@@ -14,7 +16,11 @@ beforeAll(async () => {
   const databaseURL = getDatabaseURL(process.env.NODE_ENV);
   await databaseConnector(databaseURL);
 
-  const emailsToDelete = ['test.user@test1.com', 'test.user2@test1.com'];
+  const emailsToDelete = [
+    'test.user@test1.com',
+    'test.user2@test1.com',
+    'test.403user2@test1.com',
+  ];
   for (email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
@@ -84,6 +90,15 @@ describe('User Router', () => {
       expect(response.status).toBe(404);
       expect(response.body.message).toBe('User not found.');
     });
+    it('should handle incorrect password', async () => {
+      const response = await request(app).post('/users/login').send({
+        email: 'test.user2@test1.com',
+        password: 'invalidpassword',
+      });
+
+      expect(response.status).toBe(401);
+      expect(response.body.message).toBe('Invalid password.');
+    });
   });
 
   describe('POST /users/token-refresh', () => {
@@ -104,17 +119,16 @@ describe('User Router', () => {
       expect(refreshResponse.status).toBe(200);
       expect(refreshResponse.body.jwt).toBeTruthy();
     });
-
     it('should handle invalid JWT for token refresh', async () => {
       const response = await request(app)
         .post('/users/token-refresh')
         .send({jwt: 'invalidjwt'});
 
-      expect(response.status).toBe(500);
-      expect(response.body.error).toBeTruthy();
+      expect(response.status).toBe(401);
+      expect(response.body.error).toBe('Invalid JWT');
+      expect(response.body.message).toBe('The provided token is invalid.');
     });
   });
-
   describe('GET /users', () => {
     it('should return a list of users', async () => {
       const loginResponse = await request(app).post('/users/login').send({
@@ -135,6 +149,15 @@ describe('User Router', () => {
 
   describe('GET /users/:userId', () => {
     it('should return a specific user', async () => {
+      const userResponse = await request(app).post('/users/register').send({
+        first_name: 'Test',
+        last_name: 'Smith',
+        email: 'test.user2@test1.com',
+        password: 'securepass',
+        post_code: '67890',
+        country: 'AUS',
+        position: 'Manager',
+      });
       const loginResponse = await request(app).post('/users/login').send({
         email: 'test.user2@test1.com',
         password: 'securepass',
@@ -144,6 +167,7 @@ describe('User Router', () => {
 
       // Get the Id of the registered user
       const user = await User.findOne({email: 'test.user2@test1.com'});
+
       const userId = user._id.toString();
 
       // Make a request to the endpoint with the JWT in the headers
@@ -156,6 +180,16 @@ describe('User Router', () => {
     });
 
     it('should handle non-existent user', async () => {
+      const userResponse = await request(app).post('/users/register').send({
+        first_name: 'Test',
+        last_name: 'Smith',
+        email: 'test.user2@test1.com',
+        password: 'securepass',
+        post_code: '67890',
+        country: 'AUS',
+        position: 'Manager',
+      });
+
       const loginResponse = await request(app).post('/users/login').send({
         email: 'test.user2@test1.com',
         password: 'securepass',
@@ -218,6 +252,42 @@ describe('User Router', () => {
         });
 
       expect(response.status).toBe(403);
+    });
+    it('should return a 403 error when updating a user without proper authorisation', async () => {
+      const userResponse = await request(app).post('/users/register').send({
+        first_name: 'Test',
+        last_name: 'Smith',
+        email: 'test.403user2@test1.com',
+        password: 'securepass',
+        post_code: '67890',
+        country: 'AUS',
+        position: 'Manager',
+      });
+
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'test.403user2@test1.com',
+        password: 'securepass',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      // Make a request to the endpoint with the JWT in the headers
+      await request(app).delete(`/users/${userResponse._id}`).set('jwt', jwt);
+
+      // Make a request to the endpoint with the JWT in the headers
+      const response = await request(app)
+        .put(`/users/${userResponse._id}`)
+        .set('jwt', jwt)
+        .send({
+          first_name: 'UpdatedTest',
+          last_name: 'UpdatedDoe',
+        });
+
+      expect(response.status).toBe(403);
+      expect(response.body).toHaveProperty(
+        'message',
+        'Unauthorised: You can only update your own account'
+      );
     });
   });
 

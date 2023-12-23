@@ -24,8 +24,8 @@ const {
 
 const {getUserIdFromJwt} = require('../functions/userFunctions');
 const {filterBookingsMiddleware} = require('../middleware/filterMiddleware');
-const { Booking } = require('../models/BookingModel');
-const { Room } = require('../models/RoomModel');
+const {Booking} = require('../models/BookingModel');
+const {Room} = require('../models/RoomModel');
 
 router.get(
   '/',
@@ -49,15 +49,17 @@ router.get(
 
       // Filter bookings based on start_time
       if (startTimeFilter) {
+        const startTime = new Date(startTimeFilter);
         allBookings = allBookings.filter(
-          (booking) => new Date(booking.start_time) >= new Date(startTimeFilter)
+          (booking) => new Date(booking.start_time) >= startTime
         );
       }
 
       // Filter bookings based on end_time
       if (endTimeFilter) {
+        const endTime = new Date(endTimeFilter);
         allBookings = allBookings.filter(
-          (booking) => new Date(booking.end_time) <= new Date(endTimeFilter)
+          (booking) => new Date(booking.end_time) <= endTime
         );
       }
 
@@ -81,23 +83,6 @@ router.get(
         filteredBookings = filteredBookings.concat(primaryUserBookings);
       }
 
-      // Filter by invited user
-      if (invitedUserFilter) {
-        const invitedUserBookings = allBookings.filter((booking) => {
-          // Exclude bookings with empty invited_user_ids array
-          if (booking.invited_user_ids.length === 0) {
-            return false;
-          }
-
-          // Include bookings where the requesting user is among the invited users
-          return booking.invited_user_ids.some((userId) =>
-            userId.equals(requestingUserId)
-          );
-        });
-
-        filteredBookings = filteredBookings.concat(invitedUserBookings);
-      }
-
       response.json({
         bookingCount: filteredBookings.length,
         bookings: filteredBookings,
@@ -107,7 +92,6 @@ router.get(
     }
   }
 );
-
 
 // Retrieve all per-room from bookings associated with user's rooms
 router.get(
@@ -127,7 +111,7 @@ router.get(
       const bookingsPerRoom = {};
 
       filteredBookings.forEach((booking) => {
-        const roomId = booking.room_id._id;
+        const roomId = booking.room_id._id.toString();
 
         // Validate that the room belongs to the user
         const isRoomValid = validateRoomBelongsToUser(roomId, requestingUserId);
@@ -349,10 +333,6 @@ router.put('/:bookingId', verifyJwtHeader, async (request, response, next) => {
       }),
     };
     const updatedBooking = await updateBooking(roomDetails);
-
-    if (!updatedBooking) {
-      return response.status(404).json({message: 'Booking not found'});
-    }
 
     response.json(updatedBooking);
   } catch (error) {

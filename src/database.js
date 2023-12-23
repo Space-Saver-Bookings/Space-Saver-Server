@@ -14,11 +14,6 @@ function getDatabaseURL(environment) {
       return process.env.DEV_DB_URL;
     case 'production':
       return process.env.PROD_DB_URL;
-    default:
-      console.error(
-        'Incorrect JS environment specified'
-      );
-      return process.env.DEFAULT_DB_URL || '';
   }
 }
 

@@ -33,7 +33,7 @@ beforeEach(async () => {
   for (email of emailsToDelete) {
     await deleteUserByEmail(email);
   }
-}, 10000);
+});
 
 describe('Room Router', () => {
   describe('GET /rooms', () => {

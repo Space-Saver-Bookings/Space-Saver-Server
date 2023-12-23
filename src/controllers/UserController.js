@@ -60,8 +60,6 @@ router.post(
 router.post('/login', async (request, response, next) => {
   try {
     let targetUser = await User.findOne({email: request.body.email}).exec();
-    console.log(targetUser)
-    console.log(request.body.email)
     if (!targetUser) {
       return response.status(404).json({message: 'User not found.'});
     }

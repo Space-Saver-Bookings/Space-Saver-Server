@@ -13,7 +13,6 @@ const {generateAccessCode} = require('./functions/spaceFunctions');
 const dotenv = require('dotenv');
 dotenv.config();
 
-
 const currentDateTime = new Date();
 
 // Function to seed the database
@@ -180,5 +179,4 @@ async function seedDatabase() {
   }
 }
 
-// Call the seedDatabase function
 seedDatabase();

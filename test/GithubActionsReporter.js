@@ -1,6 +1,3 @@
-// Has zero impact on the code here, but is used in CICD.
-// It simply reformats Jest's output in a way that looks
-// better for GitHub Actions reports.
 class GithubActionsReporter {
     constructor(globalConfig, options) {
         this._globalConfig = globalConfig;

@@ -839,8 +839,6 @@ Header: `jwt: jwt_token`
 
 Retrieve a list of bookings within the same space(s) as the authenticated user.
 
-Certainly! Here's the updated readme section with the example included:
-
 #### Query Parameters
 
 - `start_time` (optional, datetime (yyyy-MM-ddThh:mm:ss.SSSZ)): Filter bookings with start time after or equal to the specified time.
@@ -861,7 +859,6 @@ To retrieve bookings where the current user is both the primary user and invited
 ```plaintext
 GET /bookings?primary_user=true&invited_user=true&start_time=2023-12-16T00:20:09.489Z&end_time=2023-12-16T23:27:09.488Z
 ```
-
 
 ### Response
 

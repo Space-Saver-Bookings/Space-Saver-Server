@@ -20,12 +20,14 @@ const {
   mostUsedRoom,
   numberOfRoomsInUse,
   numberOfUsersInRooms,
+  generateEmptyTimeSlots
 } = require('../functions/bookingFunctions');
 
 const {getUserIdFromJwt} = require('../functions/userFunctions');
 const {filterBookingsMiddleware} = require('../middleware/filterMiddleware');
 const {Booking} = require('../models/BookingModel');
 const {Room} = require('../models/RoomModel');
+const { getAllRooms } = require('../functions/roomFunctions');
 
 router.get(
   '/',
@@ -100,7 +102,7 @@ router.get(
   filterBookingsMiddleware,
   async (request, response, next) => {
     try {
-      const {filteredBookings} = request;
+      const { filteredBookings } = request;
       const requestingUserId = await getUserIdFromJwt(request.headers.jwt);
 
       // Extract query parameters
@@ -133,13 +135,22 @@ router.get(
         }
       });
 
-      // Convert result to the desired format
-      const formattedResult = Object.keys(bookingsPerRoom).map((roomId) => ({
+      // Ensure all unique room_ids are included in the result
+      const allRoomIds = Array.from(new Set(filteredBookings.map((booking) => booking.room_id._id.toString())));
+
+      // Create result with all room_ids, including those without bookings
+      const formattedResult = allRoomIds.map((roomId) => ({
         room_id: roomId,
-        bookings: bookingsPerRoom[roomId],
+        bookings: bookingsPerRoom[roomId] || [],
       }));
 
-      response.json({bookingsPerRoom: formattedResult});
+      // If there are no bookings, use getAllRooms to get a list of all rooms
+      if (formattedResult.length === 0) {
+        const allRooms = await getAllRooms(requestingUserId);
+        return response.json({ bookingsPerRoom: allRooms.map(room => ({ room_id: room._id, bookings: [] })) });
+      }
+
+      response.json({ bookingsPerRoom: formattedResult });
     } catch (error) {
       next(error);
     }
@@ -153,11 +164,11 @@ router.get(
   filterBookingsMiddleware,
   async (request, response, next) => {
     try {
-      const {filteredBookings} = request;
+      const { filteredBookings } = request;
       const requestingUserId = await getUserIdFromJwt(request.headers.jwt);
 
       // Extract query parameters
-      const {startTime, endTime, interval} = extractQueryParameters(request);
+      const { startTime, endTime, interval } = extractQueryParameters(request);
 
       // Generate all time slots within the specified range and interval
       const allTimeSlots = generateTimeSlots(startTime, endTime, interval);
@@ -173,6 +184,17 @@ router.get(
         allTimeSlots,
         bookedTimeSlots
       );
+
+      // If there are no bookings, use getAllRooms to get a list of all rooms
+      if (Object.keys(availableTimeSlots).length === 0) {
+        const allRooms = await getAllRooms(requestingUserId);
+        const emptyTimeSlots = generateEmptyTimeSlots(allRooms, startTime, endTime, interval);
+        const formattedEmptyTimeSlots = Object.keys(emptyTimeSlots).map((roomId) => ({
+          room_id: roomId,
+          time_slots: emptyTimeSlots[roomId],
+        }));
+        return response.json({ availableTimeSlots: formattedEmptyTimeSlots, mostUsedRoom: null, numberOfRoomsInUse: 0, numberOfUsersInRooms: 0 });
+      }
 
       // Calculate additional information
       const dateToCheck = new Date(); // You can replace this with the specific date you want to check

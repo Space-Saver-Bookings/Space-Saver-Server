@@ -390,6 +390,32 @@ describe('Booking Router', () => {
       expect(response.status).toBe(200);
       expect(response.body.availableTimeSlots).toBeInstanceOf(Array);
     });
+    test('should return available time slots for a room with no bookings', async () => {
+      const registerResponse = await request(app).post('/users/register').send({
+        first_name: 'Ada',
+        last_name: 'Lovelace',
+        email: 'test.user5@test4.com',
+        password: 'password123',
+        post_code: '54321',
+        country: 'NZ',
+        position: 'Developer',
+      });
+
+      // Log in the user and get the JWT
+      const loginResponse = await request(app).post('/users/login').send({
+        email: 'test.user5@test4.com',
+        password: 'password123',
+      });
+
+      const jwt = await loginResponse.body.jwt;
+
+      const response = await request(app)
+        .get(`/bookings/available-time-slots`)
+        .set('jwt', jwt);
+
+      expect(response.status).toBe(200);
+      expect(response.body.availableTimeSlots).toBeInstanceOf(Array);
+    });
   });
 
   describe('POST /bookings', () => {

@@ -34,7 +34,7 @@ async function getOneBooking(bookingId) {
  * @throws {Error} An error with a message indicating the overlapping booking or invalid date range if detected.
  */
 async function createBooking(bookingDetails) {
-  const { room_id, start_time, end_time } = bookingDetails;
+  const {room_id, start_time, end_time} = bookingDetails;
 
   // Check if start_date is after end_date
   if (new Date(start_time) > new Date(end_time)) {
@@ -45,9 +45,9 @@ async function createBooking(bookingDetails) {
   const overlappingBooking = await Booking.findOne({
     room_id: room_id,
     $or: [
-      { start_time: { $lt: end_time }, end_time: { $gt: start_time } }, // New booking starts before existing ends
-      { start_time: { $lt: end_time }, end_time: { $gt: end_time } }, // New booking overlaps with existing booking
-      { start_time: { $lt: start_time }, end_time: { $gt: start_time } },
+      {start_time: {$lt: end_time}, end_time: {$gt: start_time}}, // New booking starts before existing ends
+      {start_time: {$lt: end_time}, end_time: {$gt: end_time}}, // New booking overlaps with existing booking
+      {start_time: {$lt: start_time}, end_time: {$gt: start_time}},
     ],
   });
 
@@ -79,14 +79,16 @@ async function createBooking(bookingDetails) {
  */
 async function updateBooking(bookingDetails) {
   try {
-    const existingBooking = await Booking.findById(bookingDetails.bookingId).exec();
+    const existingBooking = await Booking.findById(
+      bookingDetails.bookingId
+    ).exec();
 
     if (!existingBooking) {
       throw new Error('Booking not found.');
     }
 
     const updatedData = bookingDetails.updatedData || {};
-    const { start_time, end_time } = updatedData;
+    const {start_time, end_time} = updatedData;
 
     // Check if start_date is after end_date
     if (start_time && end_time && new Date(start_time) > new Date(end_time)) {
@@ -95,16 +97,16 @@ async function updateBooking(bookingDetails) {
 
     // Check for overlapping bookings only if start_time or end_time is updated
     if (start_time || end_time) {
-      const { room_id } = existingBooking;
+      const {room_id} = existingBooking;
 
       // Check if there is an overlapping booking for the specified room and time range
       const overlappingBooking = await Booking.findOne({
-        _id: { $ne: bookingDetails.bookingId }, // Exclude the current booking from the check
+        _id: {$ne: bookingDetails.bookingId}, // Exclude the current booking from the check
         room_id: room_id,
         $or: [
-          { start_time: { $lt: end_time }, end_time: { $gt: start_time } }, // New booking starts before existing ends
-          { start_time: { $lt: end_time }, end_time: { $gt: end_time } }, // New booking overlaps with existing booking
-          { start_time: { $lt: start_time }, end_time: { $gt: start_time } },
+          {start_time: {$lt: end_time}, end_time: {$gt: start_time}}, // New booking starts before existing ends
+          {start_time: {$lt: end_time}, end_time: {$gt: end_time}}, // New booking overlaps with existing booking
+          {start_time: {$lt: start_time}, end_time: {$gt: start_time}},
         ],
       });
 
@@ -118,14 +120,12 @@ async function updateBooking(bookingDetails) {
     return await Booking.findByIdAndUpdate(
       bookingDetails.bookingId,
       updatedData,
-      { new: true }
+      {new: true}
     ).exec();
   } catch (error) {
     throw new Error(`Error updating booking: ${error.message}`);
   }
 }
-
-
 
 /**
  * Deletes an existing booking.
@@ -230,6 +230,26 @@ function generateTimeSlots(startTime, endTime, interval) {
   }
 
   return timeSlots;
+}
+
+/**
+ * Generates empty time slots for each room within the specified range and interval.
+ *
+ * @param {Array} allRooms - The list of all rooms.
+ * @param {Date} startTime - The start time for generating time slots.
+ * @param {Date} endTime - The end time for generating time slots.
+ * @param {number} interval - The time interval in minutes for each time slot.
+ * @returns {Object} - An object containing empty time slots for each room.
+ */
+function generateEmptyTimeSlots(allRooms, startTime, endTime, interval) {
+  const emptyTimeSlots = {};
+
+  allRooms.forEach((room) => {
+    const roomId = room._id.toString();
+    emptyTimeSlots[roomId] = generateTimeSlots(startTime, endTime, interval);
+  });
+
+  return emptyTimeSlots;
 }
 
 /**
@@ -394,4 +414,5 @@ module.exports = {
   mostUsedRoom,
   numberOfRoomsInUse,
   numberOfUsersInRooms,
+  generateEmptyTimeSlots,
 };
